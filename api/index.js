@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import { makeActions, UserError } from "../lib/core.js";
+import { makeAdminActions } from "../lib/admin.js";
 
 // DB 연결은 함수가 살아있는 동안 재사용 (Supabase Transaction pooler: 6543 포트 주소를 DATABASE_URL 에 넣기)
 let sql;
@@ -17,7 +18,13 @@ function db() {
 }
 
 // 지금 옮겨진 기능 목록 (나머지는 아직 구글 Apps Script 쪽에서 처리)
-const ALLOWED = ["version", "login", "get_rooms", "get_room_detail", "get_my_week_count", "ticket", "register_link", "update_link", "land"];
+const ALLOWED = [
+  // 크루 화면
+  "version", "login", "get_rooms", "get_room_detail", "get_my_week_count", "ticket", "register_link", "update_link", "land",
+  // 관리자 화면 (읽기 + 방 관리)
+  "admin_login", "get_presets", "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily",
+  "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
+];
 
 function parseBody(req) {
   let b = req.body;
@@ -36,7 +43,8 @@ export default async function handler(req, res) {
   const action = b.action;
   try {
     if (!ALLOWED.includes(action)) return res.status(200).json({ ok: false, error: "unknown_action: " + action });
-    const out = await makeActions(db())[action](b);
+    const actions = { ...makeActions(db()), ...makeAdminActions(db()) };
+    const out = await actions[action](b);
     return res.status(200).json(out);
   } catch (e) {
     console.error("[요청오류]", action, e?.message);
