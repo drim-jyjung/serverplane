@@ -24,7 +24,7 @@ const ALLOWED = [
   // 크루 화면
   "version", "login", "get_rooms", "get_room_detail", "get_my_week_count", "ticket", "register_link", "update_link", "land",
   // 관리자 화면 (읽기 + 방 관리)
-  "admin_login", "get_presets", "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily",
+  "admin_login", "get_presets", "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily", "get_last_week_result",
   "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
   // 정산 · 경고 · 회원 · 주간현황
   "run_daily", "run_weekly", "get_week_sheet", "init_week_sheet", "manual_warn", "resolve_warning", "adjust_warn",
@@ -35,7 +35,7 @@ const ALLOWED = [
 
 // 로그인한 관리자만 쓸 수 있는 기능 (관리자 로그인 확인표 필요)
 const ADMIN_ONLY = new Set([
-  "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily",
+  "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily", "get_last_week_result",
   "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
   "run_daily", "run_weekly", "get_week_sheet", "init_week_sheet", "manual_warn", "resolve_warning", "adjust_warn",
   "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member",
