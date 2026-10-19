@@ -34,6 +34,10 @@ body{font-family:Pretendard,-apple-system,sans-serif;background:var(--bg);color:
 .ct{font-size:13px;font-weight:700}.cb{padding:16px}
 .pt{font-size:17px;font-weight:700;margin-bottom:16px}
 .sg{display:grid;gap:10px;margin-bottom:14px}
+.scrollbox{max-height:300px;overflow:auto;border-top:1px solid var(--border)}
+.dsum{padding:10px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.dsum b{color:var(--text)}
+.dsum summary{cursor:pointer}
 .sg4{grid-template-columns:repeat(4,1fr)}.sg3{grid-template-columns:repeat(3,1fr)}.sg2{grid-template-columns:1fr 1fr}
 .sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
 .sn{font-size:23px;font-weight:700}.sl{font-size:11px;color:var(--text2);margin-top:2px}
@@ -160,16 +164,24 @@ select.input{cursor:pointer}
           </div>
           <div id="wt-list"></div>
         </div>
+        <div class="card" id="lw-card" style="display:none">
+          <div class="ch"><span class="ct">📣 지난주 정산 결과 <span id="lw-range" style="font-size:11px;font-weight:400;color:var(--text3)"></span></span>
+            <button class="btn bo bsm" id="btn-lw-copy">📋 경고자 복사</button>
+          </div>
+          <div id="lw-body"></div>
+        </div>
         <div class="dv"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <div style="font-size:13px;font-weight:700">📆 주간 현황 <span id="dwrange" style="font-size:11px;font-weight:400;color:var(--text3)"></span></div>
-          <button class="btn bo bsm" id="btn-weekfail-copy">📋 미달자 복사</button>
+          <button class="btn bo bsm" id="btn-weekfail-copy">📋 이번주 진행중 미달 복사</button>
         </div>
-        <div class="sg sg3" style="margin-bottom:12px">
+        <div class="sg sg4" style="margin-bottom:12px">
           <div class="sc"><div class="sn" id="ds-wp" style="color:var(--green)">-</div><div class="sl">필참 달성</div></div>
           <div class="sc"><div class="sn" id="ds-wf" style="color:var(--red)">-</div><div class="sl">미달</div></div>
           <div class="sc"><div class="sn" id="ds-ww" style="color:var(--amber)">-</div><div class="sl">경고 활성</div></div>
+          <div class="sc"><div class="sn" id="ds-wl" style="color:var(--text3)">-</div><div class="sl">잠금(제외)</div></div>
         </div>
+        <div id="wk-note" style="display:none;margin:-4px 0 10px;padding:8px 12px;border-radius:8px;background:var(--amber-bg);color:var(--amber);font-size:12px">이번 주가 막 시작돼서 아직 참여 기록이 없습니다. 전원이 0회로 보이는 게 정상이에요. <b>지난주 결과는 위 "지난주 정산 결과"에서 복사하세요.</b></div>
         <div class="card"><div id="wkl"><div class="empty"><span class="sp spd"></span></div></div></div>
       </div>
 
@@ -583,17 +595,52 @@ document.getElementById('btn-weekfail-copy').addEventListener('click', e=>{
   const btn=e.currentTarget;
   const failList = dashWeekStats.filter(m=>!m.is_pass);
   if(!failList.length){ copyText('', null); showBnr('dok','현재 미달자가 없습니다','ok'); return; }
-  const partial = failList.filter(m=>m.week_participate>0);
-  const none = failList.filter(m=>m.week_participate===0);
-  const lines=[`[${document.getElementById('dwrange').textContent} 주2회 미달자]`];
-  if(partial.length){
-    lines.push(''); lines.push(`📌 참여했지만 미달 (${partial.length}명)`);
-    partial.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (${m.week_land}회${m.is_warned?' · 경고중':''})`));
+  const srt=[...failList].sort((x,y)=>y.week_land-x.week_land||String(x.nickname).localeCompare(String(y.nickname)));
+  const lines=[`[이번주 진행중 ${document.getElementById('dwrange').textContent} 주2회 미달자 ${srt.length}명]`,''];
+  srt.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (${m.week_land}회${m.is_warned?' · 경고중':''})`));
+  copyText(lines.join('\n'), btn);
+});
+
+// ───── 지난주 정산 결과 (월요일 아침 공지용: 다음 주간 정산 전까지 계속 보임) ─────
+let lastWeekData=null;
+const escH=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LW_ST={locked:'잠금',warned:'경고',active:'정상',inactive:'비활성'};
+async function loadLastWeek(){
+  const c=document.getElementById('lw-card');
+  const d=await api('get_last_week_result');
+  // 서버가 아직 이 기능을 모르면(업데이트 전) 카드를 숨김
+  if(!d||!d.ok){ c.style.display='none'; lastWeekData=null; return; }
+  lastWeekData=d;
+  c.style.display='';
+  document.getElementById('lw-range').textContent=d.week_key+' · '+d.week_range;
+  const body=document.getElementById('lw-body');
+  if(!d.settled){
+    body.innerHTML='<div class="empty">지난주 주간 정산 기록이 없습니다<br><span style="font-size:11px">(주간 정산 전이거나, 지난주에 정산이 실행되지 않았습니다)</span></div>';
+    return;
   }
-  if(none.length){
-    lines.push(''); lines.push(`📌 아예 미참여 (${none.length}명)`);
-    none.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (0회${m.is_warned?' · 경고중':''})`));
+  if(!d.list.length){
+    body.innerHTML='<div class="empty" style="color:var(--green)">✅ 지난주는 미달 경고자가 없었습니다'+(d.settled_at?'<br><span style="font-size:11px">정산 '+escH(d.settled_at)+'</span>':'')+'</div>';
+    return;
   }
+  const row=m=>`<div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <div style="min-width:90px;font-size:12px;font-weight:600">${escH(m.nickname)}</div>
+      <div style="flex:1;font-size:11px;color:var(--text3)">@${escH(m.insta_id)}</div>
+      <div style="font-size:12px;font-weight:700;min-width:30px;text-align:right">${m.week_land}회</div>
+      <div style="margin-left:6px;min-width:36px;text-align:right">${m.status==='locked'?'<span class="badge bdr">잠금</span>':'<span class="badge bdg">'+escH(LW_ST[m.status]||m.status)+'</span>'}</div>
+    </div>`;
+  let h='<div class="dsum"><span>경고 <b>'+d.warned_count+'명</b></span>'+(d.settled_at?'<span style="color:var(--text3)">정산 '+escH(d.settled_at)+'</span>':'')+(d.excluded_locked?'<span style="color:var(--text3)">정산 전부터 잠겨 있던 '+d.excluded_locked+'명 제외</span>':'')+'</div>';
+  h+='<details><summary style="padding:9px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--primary)">명단 보기 ▾ <span style="font-weight:400;color:var(--text3)">(복사는 위 버튼으로 하세요)</span></summary><div class="scrollbox">'
+    +d.list.map(row).join('')
+    +'</div></details>';
+  body.innerHTML=h;
+}
+document.getElementById('btn-lw-copy').addEventListener('click',e=>{
+  const btn=e.currentTarget, d=lastWeekData;
+  if(!d||!d.settled){ showBnr('derr','복사할 지난주 정산 결과가 없습니다'); return; }
+  const lines=[`[${d.week_key} (${d.week_range}) 주 2회 미달 경고자 ${d.list.length}명]`];
+  if(!d.list.length) lines.push('', '없음');
+  if(d.list.length) lines.push('');
+  d.list.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (${m.week_land}회)`));
   copyText(lines.join('\n'), btn);
 });
 
@@ -616,8 +663,11 @@ function copyWarnTargets(btn){
 async function loadDash(){
   document.getElementById('wkl').innerHTML='<div class="empty"><span class="sp spd"></span></div>';
   const d=await api('get_daily'); if(!d.ok)return;
-  const rs=d.room_stats||[],wt=d.warn_targets||[],ws=d.week_stats||[];
+  const rs=d.room_stats||[],wt=d.warn_targets||[];let ws=d.week_stats||[];
   dashWarnTargets=wt;
+  // 잠금 계정은 참여할 수 없으므로 주간 미달 집계·복사에서 분리 (별도 접힘으로만 표시)
+  const wsLocked=ws.filter(m=>m.status==='locked');
+  ws=ws.filter(m=>m.status!=='locked');
   dashWeekStats=ws;
   document.getElementById('ddate').textContent=d.date||'';
   document.getElementById('dwrange').textContent=d.week_range||'';
@@ -646,13 +696,18 @@ async function loadDash(){
       <div style="margin-left:5px">${m.is_pass?'<span class="badge bdk">통과</span>':'<span class="badge bdm">미달</span>'}${m.is_warned?' <span class="badge bdr">경고</span>':''}</div>
     </div>`;
   };
-  const inPart=ws.filter(m=>m.week_participate>0), noPart=ws.filter(m=>m.week_participate===0);
-  const inPartTitle = inPart.length
-    ? `<div style="padding:8px 14px;font-size:12px;font-weight:700;color:var(--text2);background:var(--bg);border-bottom:1px solid var(--border)">📌 이번주 참여 있음 (${inPart.length}명) — 착륙 횟수순</div>`
-    : '';
-  document.getElementById('wkl').innerHTML=inPartTitle+inPart.map(row).join('')
-    +(noPart.length?`<details style="border-top:1px solid var(--border)"><summary style="padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2)">📌 이번주 참여 0회 — 미참여 (${noPart.length}명) · 클릭해서 펼치기</summary>${noPart.map(row).join('')}</details>`:'');
+  const wsSorted=[...ws].sort((x,y)=>(x.is_pass===y.is_pass?0:(x.is_pass?1:-1))||y.week_land-x.week_land);
+  document.getElementById('ds-wl').textContent=wsLocked.length;
+  document.getElementById('wk-note').style.display=(ws.length&&ws.every(m=>m.week_participate===0))?'':'none';
+  const sub=(t,c)=>`<div style="padding:7px 14px;font-size:12px;font-weight:700;color:${c||'var(--text2)'};background:var(--bg);border-bottom:1px solid var(--border)">${t}</div>`;
+  document.getElementById('wkl').innerHTML=
+    `<div class="dsum"><span>통과 <b>${wpass}</b>명</span><span>미달 <b>${ws.length-wpass}</b>명</span><span>잠금 <b>${wsLocked.length}</b>명</span></div>`
+    +`<details><summary style="padding:9px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--primary)">명단 보기 ▾ <span style="font-weight:400;color:var(--text3)">(복사는 위 버튼으로 하세요)</span></summary><div class="scrollbox">`
+    +wsSorted.map(row).join('')
+    +(wsLocked.length?sub(`🔒 잠금 계정 (${wsLocked.length}명) — 미달 집계·복사에서 제외`,'var(--text3)')+wsLocked.map(row).join(''):'')
+    +`</div></details>`;
   loaded.dashboard=true;
+  loadLastWeek();
 }
 
 async function doDailyD(){
