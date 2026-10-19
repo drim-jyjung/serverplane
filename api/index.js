@@ -1,6 +1,7 @@
 import postgres from "postgres";
 import { makeActions, UserError } from "../lib/core.js";
 import { makeAdminActions } from "../lib/admin.js";
+import { makeSettleActions } from "../lib/settle.js";
 
 // DB 연결은 함수가 살아있는 동안 재사용 (Supabase Transaction pooler: 6543 포트 주소를 DATABASE_URL 에 넣기)
 let sql;
@@ -24,6 +25,11 @@ const ALLOWED = [
   // 관리자 화면 (읽기 + 방 관리)
   "admin_login", "get_presets", "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily",
   "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
+  // 정산 · 경고 · 회원 · 주간현황
+  "run_daily", "run_weekly", "get_week_sheet", "init_week_sheet", "manual_warn", "resolve_warning", "adjust_warn",
+  "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member",
+  // 자동 실행 (CRON_SECRET 필요)
+  "auto_lock_expired", "auto_daily_job",
 ];
 
 function parseBody(req) {
@@ -43,7 +49,7 @@ export default async function handler(req, res) {
   const action = b.action;
   try {
     if (!ALLOWED.includes(action)) return res.status(200).json({ ok: false, error: "unknown_action: " + action });
-    const actions = { ...makeActions(db()), ...makeAdminActions(db()) };
+    const actions = { ...makeActions(db()), ...makeAdminActions(db()), ...makeSettleActions(db(), { cronSecret: process.env.CRON_SECRET }) };
     const out = await actions[action](b);
     return res.status(200).json(out);
   } catch (e) {
