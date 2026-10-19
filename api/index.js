@@ -47,6 +47,9 @@ export default async function handler(req, res) {
 
   const b = parseBody(req);
   const action = b.action;
+  const t0 = Date.now();
+  // 어떤 요청이 몇 ms 걸렸는지 Vercel Logs 에 남김 (느린 기능 찾기용). 비밀번호·개인정보는 남기지 않음
+  res.on?.("finish", () => console.log(`[요청] action=${action} ${Date.now() - t0}ms region=${process.env.VERCEL_REGION || "?"}`));
   try {
     if (!ALLOWED.includes(action)) return res.status(200).json({ ok: false, error: "unknown_action: " + action });
     const actions = { ...makeActions(db()), ...makeAdminActions(db()), ...makeSettleActions(db(), { cronSecret: process.env.CRON_SECRET }) };
