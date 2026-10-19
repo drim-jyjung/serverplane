@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비행기방 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4F6;--surface:#fff;--primary:#1A6BFF;--primary-light:#E8F0FF;
+  --text:#111827;--text2:#6B7280;--text3:#9CA3AF;
+  --border:#E5E7EB;--border2:#D1D5DB;
+  --green:#059669;--green-bg:#ECFDF5;
+  --amber:#D97706;--amber-bg:#FFFBEB;
+  --red:#DC2626;--red-bg:#FEF2F2;
+  --purple:#7C3AED;--purple-bg:#F5F3FF;
+  --r:10px;--rsm:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Pretendard,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+#pg-login{display:flex;align-items:center;justify-content:center;min-height:100vh}
+#pg-login.hide{display:none}
+#pg-dash{display:none;flex-direction:column;min-height:100vh}
+#pg-dash.show{display:flex}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:30;flex-shrink:0}
+.layout{display:flex;flex:1}
+.sidebar{width:175px;background:var(--surface);border-right:1px solid var(--border);padding:12px 8px;flex-shrink:0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.main{flex:1;padding:20px;min-height:0;overflow-y:auto}
+.panel{display:none}.panel.active{display:block}
+.ni{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:var(--rsm);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:2px;user-select:none}
+.ni:hover{background:var(--bg)}.ni.on{background:var(--primary-light);color:var(--primary);font-weight:600}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);margin-bottom:14px;overflow:hidden}
+.ch{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.ct{font-size:13px;font-weight:700}.cb{padding:16px}
+.pt{font-size:17px;font-weight:700;margin-bottom:16px}
+.sg{display:grid;gap:10px;margin-bottom:14px}
+.sg4{grid-template-columns:repeat(4,1fr)}.sg3{grid-template-columns:repeat(3,1fr)}.sg2{grid-template-columns:1fr 1fr}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.sn{font-size:23px;font-weight:700}.sl{font-size:11px;color:var(--text2);margin-top:2px}
+.field{margin-bottom:11px}.field:last-child{margin-bottom:0}
+.fl{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block}
+.input{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border-color .15s}
+.input:focus{border-color:var(--primary)}.input::placeholder{color:var(--text3)}
+select.input{cursor:pointer}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--rsm);border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bp{background:var(--primary);color:#fff}.bo{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.bgg{background:var(--green);color:#fff}.bam{background:var(--amber);color:#fff}.bred{background:var(--red);color:#fff}
+.bfl{width:100%}.bsm{padding:4px 10px;font-size:12px;border-radius:6px}
+.btn-danger{color:var(--red);border:1px solid var(--red);background:transparent}
+.btn-success{background:var(--green);color:#fff;border:none}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.bdk{background:var(--green-bg);color:var(--green)}.bdm{background:var(--amber-bg);color:var(--amber)}
+.bdr{background:var(--red-bg);color:var(--red)}.bdb{background:var(--primary-light);color:var(--primary)}
+.bdg{background:var(--bg);color:var(--text2)}.bdp{background:var(--purple-bg);color:var(--purple)}
+.tag{display:inline-flex;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--primary-light);color:var(--primary);margin:1px}
+.bnr{padding:10px 12px;border-radius:var(--rsm);font-size:12px;margin-bottom:10px;display:none}
+.bnr.show{display:block}
+.bnr-e{background:var(--red-bg);color:var(--red);border:1px solid #FECACA}
+.bnr-o{background:var(--green-bg);color:var(--green);border:1px solid #A7F3D0}
+.bnr-w{background:var(--amber-bg);color:var(--amber);border:1px solid #FDE68A}
+.sp{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+.spd{border-color:var(--border);border-top-color:var(--primary)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--text3);padding:7px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}.tbl tr:hover td{background:#fafafa}
+.cbtn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:5px;border:1px solid var(--border2);font-size:15px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text);font-family:inherit}
+.cbtn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.cbtn:disabled{opacity:.3;cursor:not-allowed}
+.cv{font-size:13px;font-weight:700;min-width:22px;text-align:center;display:inline-block}
+.act-cell{display:flex;gap:3px;align-items:center}
+.rca{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.rcah{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;background:var(--bg)}
+.pr{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border)}
+.pr:last-child{border-bottom:none}
+.av{width:28px;height:28px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.wb{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;min-width:50px}
+.wbi{height:100%;border-radius:3px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.ov.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.15);width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:22px}
+.mt{font-size:15px;font-weight:700;margin-bottom:14px}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.iconf{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e2330;color:#fff;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.3);z-index:9999;font-size:13px;white-space:nowrap;animation:slideUp .15s ease}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.iconf-yes{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff}
+.iconf-yes.danger{background:var(--red)}
+.iconf-no{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.25);cursor:pointer;background:transparent;color:#fff}
+.dv{height:1px;background:var(--border);margin:12px 0}
+.empty{text-align:center;padding:28px;color:var(--text3);font-size:13px}
+.week-tbl-wrap{overflow-x:auto}
+.week-tbl{border-collapse:collapse;white-space:nowrap;font-size:12px}
+.week-tbl th,.week-tbl td{padding:6px 10px;border:1px solid var(--border);text-align:center}
+.week-tbl th{background:var(--primary-light);color:var(--primary);font-weight:700;font-size:11px}
+.week-tbl td:nth-child(1),.week-tbl td:nth-child(2),.week-tbl td:nth-child(3){text-align:left;background:#fafafa;position:sticky;left:0}
+.week-tbl td:nth-child(2){left:80px}.week-tbl td:nth-child(3){left:160px}
+.week-tbl th:nth-child(1),.week-tbl th:nth-child(2),.week-tbl th:nth-child(3){position:sticky;left:0;z-index:2}
+.week-tbl th:nth-child(2){left:80px}.week-tbl th:nth-child(3){left:160px}
+.mark-land{color:var(--green);font-weight:700}
+.mark-tick{color:var(--amber)}
+.mark-sum{background:var(--green-bg);color:var(--green);font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="pg-login">
+  <div style="background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:32px;width:340px">
+    <div style="text-align:center;margin-bottom:24px"><div style="font-size:36px">✈️</div><div style="font-size:18px;font-weight:800;margin-top:6px">비행기방 <span style="color:var(--primary)">관리자</span></div></div>
+    <div id="lerr" class="bnr bnr-e"></div>
+    <div class="field"><label class="fl">닉네임</label><input class="input" id="aid" placeholder="닉네임" autocomplete="off"></div>
+    <div class="field"><label class="fl">인스타 아이디</label><input class="input" id="apw" placeholder="instagram_id" autocomplete="off" autocapitalize="none"></div>
+    <button class="btn bp bfl" id="btnLogin" style="margin-top:4px">로그인</button>
+  </div>
+</div>
+
+<div id="pg-dash">
+  <div class="topbar">
+    <div style="font-size:14px;font-weight:800">✈ 비행기방 <span style="color:var(--primary)">관리자</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="admbdg" style="font-size:12px;color:var(--text2)"></span>
+      <button class="btn bo bsm" id="btnLogout">로그아웃</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="ni on" data-panel="dashboard">📊 대시보드</div>
+      <div class="ni" data-panel="rooms">🏠 룸 관리</div>
+      <div class="ni" data-panel="monitor">👥 참여 현황</div>
+      <div class="ni" data-panel="settle">📋 정산</div>
+      <div class="ni" data-panel="weekly">📅 주간 시트</div>
+      <div class="ni" data-panel="members">👤 멤버 관리</div>
+      <div class="ni" data-panel="logs">📝 활동 로그</div>
+    </div>
+    <div class="main">
+
+      <div class="panel active" id="panel-dashboard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="pt" style="margin:0">대시보드 <span id="ddate" style="font-size:12px;font-weight:400;color:var(--text3)"></span></div>
+          <button class="btn bo bsm" id="btnDashRefresh">새로고침</button>
+        </div>
+        <div id="dok" class="bnr bnr-o"></div><div id="derr" class="bnr bnr-e"></div>
+        <div class="sg sg4">
+          <div class="sc"><div class="sn" id="ds-r">-</div><div class="sl">오늘 룸</div></div>
+          <div class="sc"><div class="sn" id="ds-j">-</div><div class="sl">총 참여</div></div>
+          <div class="sc"><div class="sn" id="ds-l" style="color:var(--green)">-</div><div class="sl">착륙 완료</div></div>
+          <div class="sc"><div class="sn" id="ds-w" style="color:var(--red)">-</div><div class="sl">경고 대상(미처리)</div></div>
+        </div>
+        <div class="card" id="wt-card" style="display:none">
+          <div class="ch"><span class="ct">⚠ 착륙 미완료 — 경고 대상</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn bo bsm" id="btn-wt-copy">📋 전체 복사</button>
+              <button class="btn bam bsm" id="btn-daily-d">일간 정산</button>
+            </div>
+          </div>
+          <div id="wt-list"></div>
+        </div>
+        <div class="dv"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700">📆 주간 현황 <span id="dwrange" style="font-size:11px;font-weight:400;color:var(--text3)"></span></div>
+          <button class="btn bo bsm" id="btn-weekfail-copy">📋 미달자 복사</button>
+        </div>
+        <div class="sg sg3" style="margin-bottom:12px">
+          <div class="sc"><div class="sn" id="ds-wp" style="color:var(--green)">-</div><div class="sl">필참 달성</div></div>
+          <div class="sc"><div class="sn" id="ds-wf" style="color:var(--red)">-</div><div class="sl">미달</div></div>
+          <div class="sc"><div class="sn" id="ds-ww" style="color:var(--amber)">-</div><div class="sl">경고 활성</div></div>
+        </div>
+        <div class="card"><div id="wkl"><div class="empty"><span class="sp spd"></span></div></div></div>
+      </div>
+
+      <div class="panel" id="panel-rooms">
+        <div id="rok" class="bnr bnr-o"></div><div id="rerr" class="bnr bnr-e"></div>
+        <div class="card">
+          <div class="ch" style="flex-wrap:wrap">
+            <span class="ct" id="roomsListTitle">오늘의 비행기</span>
+            <div style="display:flex;gap:5px">
+              <button class="btn bo bsm" id="btnRoomsCopyAll">📋 전체 현황 복사</button>
+              <button class="btn bp bsm" id="btnOpenCR">+ 직접 생성</button>
+              <button class="btn bo bsm" id="btn-preset-all">⚡ 프리셋 6종</button>
+            </div>
+          </div>
+          <div class="ch" style="background:var(--bg);flex-wrap:wrap">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <input class="input" id="rfw" placeholder="2026_W35 (주)" style="width:120px">
+              <button class="btn bo bsm" id="btnRFWThis">이번주</button>
+              <span style="color:var(--text3);font-size:12px">또는</span>
+              <input type="date" class="input" id="rfd" style="width:140px">
+              <button class="btn bo bsm" id="btnRFToday">오늘로</button>
+            </div>
+            <button class="btn bo bsm" id="btnARRefresh">새로고침</button>
+          </div>
+          <div id="rooms-list"><div class="empty"><span class="sp spd"></span></div></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-monitor">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="pt" style="margin:0">참여 현황</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn bo bsm" id="btnMonCopyAll">📋 오늘 미착륙자 전체 복사</button>
+            <button class="btn bo bsm" id="btnMonRefresh">새로고침</button>
+          </div>
+        </div>
+        <div id="sok" class="bnr bnr-o"></div>
+        <div id="mon-content"><div class="empty"><span class="sp spd"></span></div></div>
+      </div>
+
+      <div class="panel" id="panel-settle">
+        <div class="pt">정산</div>
+        <div id="skok" class="bnr bnr-o"></div><div id="serr" class="bnr bnr-e"></div>
+        <div class="card cb">
+          <div id="sinfo" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bam" style="width:150px" id="btn-daily-s">일간 정산 실행</button>
+            <button class="btn bp" style="width:150px" id="btn-weekly-s">주간 정산 실행</button>
+            <button class="btn bo" style="width:180px" id="btn-init-week">📋 이번주 시트 초기화</button>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--text3)">일간: 착륙 마감 룸 미착륙자 경고 · 주간: 착륙 2회 미달 경고 + 우수/명예 초기화<br>※ 정산 기록은 "정산이 실행된 날짜"가 아니라 <strong>방이 열렸던 날짜</strong> 기준으로 저장됩니다.</div>
+        </div>
+        <div id="sresult"></div>
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700">📋 일간 정산 히스토리</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="date" class="input" id="log-date" style="width:140px">
+              <button class="btn bo bsm" id="btnLogHistory">조회</button>
+            </div>
+          </div>
+          <div class="card"><div id="log-history"><div class="empty">날짜를 선택하고 조회하세요</div></div></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-weekly">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="pt" style="margin:0">📅 주간 시트</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="input" id="wk-input" placeholder="2025_W21" style="width:120px">
+            <button class="btn bo bsm" id="btn-wk-load">조회</button>
+          </div>
+        </div>
+        <div class="card"><div id="week-sheet-content"><div class="empty">주차를 입력하고 조회하세요<br><span style="font-size:11px;margin-top:4px;display:block">예: 2025_W21</span></div></div></div>
+      </div>
+
+      <div class="panel" id="panel-members">
+        <div class="card">
+          <div class="ch">
+            <div style="display:flex;gap:6px">
+              <input class="input" id="msrch" placeholder="닉네임/아이디 검색" style="width:175px">
+              <select class="input" id="msf" style="width:90px">
+                <option value="">전체</option><option value="active">활성</option>
+                <option value="warned">경고</option><option value="locked">잠금</option><option value="inactive">비활성</option>
+              </select>
+            </div>
+            <button class="btn bp bsm" id="btnOpenAM">+ 등록</button>
+          </div>
+          <div id="mok" class="bnr bnr-o" style="margin:10px 16px 0"></div>
+          <div id="merr" class="bnr bnr-e" style="margin:10px 16px 0"></div>
+          <div id="mtbl"><div class="empty"><span class="sp spd"></span></div></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-logs">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="pt" style="margin:0">📝 활동 로그</div>
+          <button class="btn bo bsm" id="btnLogRefresh">새로고침</button>
+        </div>
+        <div class="card cb" style="margin-bottom:12px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div class="field" style="margin:0"><label class="fl">멤버</label>
+              <select class="input" id="logm" style="width:150px"><option value="">전체</option></select></div>
+            <div class="field" style="margin:0"><label class="fl">액션</label>
+              <select class="input" id="loga" style="width:130px">
+                <option value="">전체</option>
+                <option value="ticket">탑승</option>
+                <option value="link_register">링크 등록</option>
+                <option value="link_update">링크 수정</option>
+                <option value="land">착륙</option>
+                <option value="admin_land">관리자 착륙</option>
+              </select></div>
+            <button class="btn bo bsm" id="btnLogSearch">조회</button>
+          </div>
+        </div>
+        <div class="card"><div id="ltbl"><div class="empty">멤버 또는 액션을 선택하고 조회해주세요</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="mcr">
+  <div class="modal">
+    <div class="mt">룸 생성</div>
+    <div id="crerr" class="bnr bnr-e"></div>
+    <div class="r3" style="margin-bottom:10px">
+      <div class="field" style="margin:0"><label class="fl">날짜</label><input class="input" id="crd" type="date"></div>
+      <div class="field" style="margin:0"><label class="fl">룸 번호</label><input class="input" id="crn" type="number" min="1" value="1"></div>
+      <div class="field" style="margin:0"><label class="fl">최대 인원</label><input class="input" id="crm" type="number" value="20"></div>
+    </div>
+    <div style="background:#F8FAFF;border:1px solid #DDEAFF;border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px">시간</div>
+      <div style="display:grid;grid-template-columns:55px 1fr 12px 1fr;align-items:center;gap:5px;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;color:var(--primary)">티켓팅</span>
+        <input class="input" id="crts" type="time" value="10:00" style="text-align:center">
+        <span style="text-align:center;color:var(--text3)">~</span>
+        <input class="input" id="crte" type="time" value="22:00" style="text-align:center">
+      </div>
+      <div style="display:grid;grid-template-columns:55px 1fr 12px 1fr;align-items:center;gap:5px">
+        <span style="font-size:11px;font-weight:700;color:var(--green)">착륙</span>
+        <input class="input" id="crls" type="time" value="22:00" style="text-align:center">
+        <span style="text-align:center;color:var(--text3)">~</span>
+        <input class="input" id="crle" type="time" value="09:00" style="text-align:center">
+      </div>
+    </div>
+    <div class="field">
+      <label class="fl">품앗이 항목</label>
+      <div class="chip-wrap" id="ichips">
+        <span class="chip">좋아요</span><span class="chip">댓글</span><span class="chip">저장</span><span class="chip">공유하기</span><span class="chip">리포스트</span>
+      </div>
+      <div style="margin-top:5px;font-size:12px;color:var(--text2)">선택: <span id="sitems" style="font-weight:600">없음</span></div>
+    </div>
+    <div class="field"><label class="fl">메모</label><input class="input" id="crmo" placeholder="메모 (선택)"></div>
+    <div style="display:flex;gap:8px"><button class="btn bp" style="flex:1" id="btnCR">생성</button><button class="btn bo" id="btnCRClose">취소</button></div>
+  </div>
+</div>
+
+<div class="ov" id="mer">
+  <div class="modal">
+    <div class="mt">룸 수정</div>
+    <div id="ererr" class="bnr bnr-e"></div>
+    <input type="hidden" id="erid"><input type="hidden" id="erdate">
+    <div class="r2" style="margin-bottom:10px">
+      <div class="field" style="margin:0"><label class="fl">최대 인원</label><input class="input" id="ermax" type="number" min="1"></div>
+      <div class="field" style="margin:0"><label class="fl">상태</label><select class="input" id="erst"><option value="open">open</option><option value="closed">closed</option></select></div>
+    </div>
+    <div style="background:#F8FAFF;border:1px solid #DDEAFF;border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:55px 1fr 12px 1fr;align-items:center;gap:5px;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;color:var(--primary)">티켓팅</span>
+        <input class="input" id="erts" type="time" style="text-align:center">
+        <span style="text-align:center;color:var(--text3)">~</span>
+        <input class="input" id="erte" type="time" style="text-align:center">
+      </div>
+      <div style="display:grid;grid-template-columns:55px 1fr 12px 1fr;align-items:center;gap:5px">
+        <span style="font-size:11px;font-weight:700;color:var(--green)">착륙</span>
+        <input class="input" id="erls" type="time" style="text-align:center">
+        <span style="text-align:center;color:var(--text3)">~</span>
+        <input class="input" id="erle" type="time" style="text-align:center">
+      </div>
+    </div>
+    <div class="field"><label class="fl">품앗이 항목</label>
+      <div class="chip-wrap" id="echips"><span class="chip">좋아요</span><span class="chip">댓글</span><span class="chip">저장</span><span class="chip">공유하기</span><span class="chip">리포스트</span></div>
+    </div>
+    <div class="field"><label class="fl">메모</label><input class="input" id="ermo"></div>
+    <div style="display:flex;gap:8px"><button class="btn bp" id="btnER">수정 완료</button><button class="btn bo" id="btnERClose">취소</button></div>
+  </div>
+</div>
+
+<div class="ov" id="mmb">
+  <div class="modal">
+    <div id="mmbt" class="mt">멤버 등록</div>
+    <div id="mberr" class="bnr bnr-e"></div>
+    <div id="mmb-fields">
+      <div class="r2" style="margin-bottom:10px">
+        <div class="field" style="margin:0"><label class="fl">닉네임</label><input class="input" id="amnk" autocomplete="off"></div>
+        <div class="field" style="margin:0"><label class="fl">인스타 아이디</label><input class="input" id="amin" autocomplete="off" autocapitalize="none"></div>
+      </div>
+    </div>
+    <div class="field"><label class="fl">메모</label><input class="input" id="ammo" placeholder="메모 (선택)"></div>
+    <div style="display:flex;gap:8px"><button class="btn bp" style="flex:1" id="btnMB">등록 완료</button><button class="btn bo" id="btnMBClose">취소</button></div>
+  </div>
+</div>
+
+<div class="ov" id="mrh">
+  <div class="modal" style="width:600px">
+    <div class="mt" id="rhTitle">룸 상세</div>
+    <div id="rhBody"><div class="empty"><span class="sp spd"></span></div></div>
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn bo" style="flex:1" id="btnRHCopy">📋 복사</button>
+      <button class="btn bo" style="flex:1" id="btnRHClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ★ 수정 필요: 배포 URL
+// ══════════════════════════════════════════════
+const API = 'https://serverplane.vercel.app/api';
+
+const SK = 'plane_admin_v2';
+const PRESETS=[
+  {num:1,label:'[좋아요+리포스트] 20명',items:'좋아요,리포스트',max:20,ts:'12:00',te:'15:00',ls:'15:01',le:'18:00',nextDay:false},
+  {num:2,label:'[좋아요+저장+공유] 20명',items:'좋아요,저장,공유하기',max:20,ts:'12:00',te:'15:00',ls:'15:01',le:'18:00',nextDay:false},
+  {num:3,label:'[좋아요] 무제한',items:'좋아요',max:9999,ts:'11:00',te:'22:00',ls:'22:01',le:'10:00',nextDay:true},
+  {num:4,label:'[좋+댓] 20명',items:'좋아요,댓글',max:20,ts:'11:00',te:'22:00',ls:'22:01',le:'10:00',nextDay:true},
+  {num:5,label:'[좋+댓] 20명',items:'좋아요,댓글',max:20,ts:'19:00',te:'22:00',ls:'22:01',le:'10:00',nextDay:true},
+  {num:6,label:'[무한공유] 무제한',items:'공유하기',max:9999,ts:'11:00',te:'20:00',ls:'20:01',le:'23:00',nextDay:false},
+];
+
+let adminInfo=null, memberList=[], roomCache=[], monStats=[], editMemberId=null;
+const loaded={dashboard:false,rooms:false,monitor:false,members:false};
+
+const saveS  = d=>{ try{sessionStorage.setItem(SK,JSON.stringify(d));}catch(e){} };
+const loadS  = ()=>{ try{return JSON.parse(sessionStorage.getItem(SK));}catch(e){return null;} };
+const clearS = ()=>{ try{sessionStorage.removeItem(SK);}catch(e){} };
+
+// ── API — 조회(get_*)류만 실패 시 1회 자동 재시도.
+// 관리자의 증감/실행류 액션(adjust_warn, manual_warn, run_daily 등)은 서버에 중복방지
+// 체크가 없는 것들이 있어서, 응답만 유실된 상황에서 재시도하면 실제로 두 번 적용될
+// 위험이 있음 — 그래서 안전하게 "조회"만 재시도하고 나머지는 기존처럼 즉시 실패 처리.
+async function api(action,body={},_retry){
+  const isReadOnly = action.indexOf('get_')===0;
+  if (_retry===undefined) _retry = isReadOnly;
+  try{
+    // 새 서버는 로그인할 때 받은 확인표(admin_token)가 있어야 관리자 기능을 처리함 (구글 서버는 이 값을 무시)
+    const r=await fetch(API,{method:'POST',body:JSON.stringify({...body,action,admin_token:(adminInfo&&adminInfo.token)||undefined})});
+    const j=await r.json();
+    if(j&&j.auth_required&&adminInfo){
+      doLogout();
+      showBnr('lerr','로그인이 만료되었습니다. 다시 로그인해주세요');
+    }
+    return j;
+  }
+  catch(e){
+    if (_retry) {
+      await new Promise(resolve => setTimeout(resolve, 700));
+      return api(action, body, false);
+    }
+    return{ok:false,error:'네트워크 오류'};
+  }
+}
+
+function btnLoad(id,on,label=''){
+  const el=typeof id==='string'?document.getElementById(id):id; if(!el)return;
+  if(on){el._orig=el.innerHTML;el.disabled=true;el.innerHTML='<span class="sp"></span>';}
+  else{el.disabled=false;el.innerHTML=label||el._orig||el.innerHTML;}
+}
+
+const showBnr=(id,msg,type='error')=>{const el=document.getElementById(id);if(!el)return;el.className=`bnr bnr-${type==='ok'?'o':type==='warn'?'w':'e'} show`;el.textContent=msg;if(type==='ok')setTimeout(()=>el.classList.remove('show'),3500);};
+const hideBnr=id=>document.getElementById(id)?.classList.remove('show');
+
+const openModal=id=>document.getElementById(id).classList.add('show');
+const closeModal=id=>document.getElementById(id).classList.remove('show');
+document.querySelectorAll('.ov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
+
+let _toast=null;
+function iconfirm(msg,danger=false){
+  return new Promise(resolve=>{
+    if(_toast){_toast.remove();_toast=null;}
+    const el=document.createElement('div'); el.className='iconf';
+    el.innerHTML=`<span>${msg}</span><button class="iconf-no">취소</button><button class="iconf-yes${danger?' danger':''}">확인</button>`;
+    document.body.appendChild(el); _toast=el;
+    const done=v=>{el.remove();_toast=null;resolve(v);};
+    el.querySelector('.iconf-yes').onclick=()=>done(true);
+    el.querySelector('.iconf-no').onclick=()=>done(false);
+    setTimeout(()=>{if(_toast===el)done(false);},6000);
+  });
+}
+
+function extractUrl(text){
+  if(!text) return '';
+  const m = String(text).match(/https?:\/\/[^\s]+/);
+  if(!m) return '';
+  let url = m[0];
+  const koreanIdx = url.search(/[가-힣]/);
+  if(koreanIdx > -1) url = url.substring(0, koreanIdx);
+  url = url.replace(/[),.!?;:'"”’]+$/,'');
+  return url;
+}
+
+function copyText(txt, btn){
+  if(!txt){ showBnr('sok','복사할 내용이 없습니다'); return; }
+  const orig=btn?btn.innerHTML:null;
+  const done=()=>{ if(btn){ btn.innerHTML='✓ 복사됨!'; setTimeout(()=>{btn.innerHTML=orig;},1500); } };
+  navigator.clipboard.writeText(txt).then(done).catch(()=>{
+    const t=document.createElement('textarea'); t.value=txt;
+    document.body.appendChild(t); t.select(); document.execCommand('copy');
+    document.body.removeChild(t); done();
+  });
+}
+
+const td=()=>{const d=new Date();return new Date(d.getTime()+9*60*60*1000).toISOString().slice(0,10);};
+const nd=d=>{const x=new Date(d);x.setDate(x.getDate()+1);return x.toISOString().slice(0,10);};
+const lt=n=>n?n[0]:'?';
+
+function kstDateParts_(dateStr){ const m=String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?{y:+m[1],mo:+m[2],d:+m[3]}:null; }
+function utcMidnightOfKstDate_(dateStr){ const p=kstDateParts_(dateStr); return new Date(Date.UTC(p.y,p.mo-1,p.d)); }
+function weekdayOfKstDate_(dateStr){ return utcMidnightOfKstDate_(dateStr).getUTCDay(); }
+function addDaysToKstDate_(dateStr,n){ const d=utcMidnightOfKstDate_(dateStr); d.setUTCDate(d.getUTCDate()+n); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+function weekKeyOf(dateStr){
+  const day=weekdayOfKstDate_(dateStr);
+  const thuStr=addDaysToKstDate_(dateStr, 4-(day||7));
+  const thuParts=kstDateParts_(thuStr);
+  const thuUTC=utcMidnightOfKstDate_(thuStr).getTime();
+  const ysUTC=Date.UTC(thuParts.y,0,1);
+  const wn=Math.ceil(((thuUTC-ysUTC)/86400000+1)/7);
+  return thuParts.y+'_W'+String(wn).padStart(2,'0');
+}
+function thisWeekKey(){
+  return weekKeyOf(td());
+}
+
+document.querySelector('.sidebar').addEventListener('click',e=>{
+  const ni=e.target.closest('.ni'); if(!ni)return;
+  switchPanel(ni.dataset.panel);
+});
+function switchPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.querySelector(`.ni[data-panel="${name}"]`).classList.add('on');
+  if(name==='dashboard') loadDash();
+  if(name==='rooms') { roomsView.mode='today'; document.getElementById('rfd').value=''; document.getElementById('rfw').value=''; loadRoomsView(); }
+  if(name==='monitor'&&!loaded.monitor) loadMon();
+  if(name==='members'&&!loaded.members) loadM();
+  if(name==='settle') { loadSI(); document.getElementById('log-date').value=td(); }
+  if(name==='weekly') { document.getElementById('wk-input').value=thisWeekKey(); loadWeekSheet(); }
+  if(name==='logs') initLogs();
+}
+
+document.getElementById('btnLogin').addEventListener('click',doLogin);
+document.getElementById('apw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('btnLogout').addEventListener('click',doLogout);
+
+const ADMIN_CRED = 'plane_admin_cred';
+
+async function doLogin(){
+  const nick=document.getElementById('aid').value.trim(), insta=document.getElementById('apw').value.trim();
+  hideBnr('lerr');
+  if(!nick||!insta){showBnr('lerr','닉네임과 인스타 아이디를 입력해주세요');return;}
+  btnLoad('btnLogin',true);
+  const d=await api('admin_login',{nickname:nick,insta_id:insta});
+  btnLoad('btnLogin',false,'로그인');
+  if(!d.ok){showBnr('lerr',d.error||'로그인 실패');return;}
+  try { localStorage.setItem(ADMIN_CRED, JSON.stringify({nickname:nick, insta_id:insta})); } catch(e){}
+  adminInfo=d.admin; saveS(adminInfo);
+  document.getElementById('admbdg').textContent='👤 '+adminInfo.nickname;
+  document.getElementById('pg-login').classList.add('hide');
+  document.getElementById('pg-dash').classList.add('show');
+  loadDash();
+}
+function doLogout(){
+  adminInfo=null;memberList=[];roomCache=[];clearS();
+  try { localStorage.removeItem(ADMIN_CRED); } catch(e){}
+  Object.keys(loaded).forEach(k=>loaded[k]=false);
+  document.getElementById('pg-login').classList.remove('hide');
+  document.getElementById('pg-dash').classList.remove('show');
+  document.getElementById('aid').value='';
+  document.getElementById('apw').value='';
+}
+window.addEventListener('load',()=>{
+  const s=loadS();
+  if(s?.admin_id){
+    adminInfo=s;
+    document.getElementById('admbdg').textContent='👤 '+adminInfo.nickname;
+    document.getElementById('pg-login').classList.add('hide');
+    document.getElementById('pg-dash').classList.add('show');
+    loadDash();
+    return;
+  }
+  try {
+    const cred=JSON.parse(localStorage.getItem(ADMIN_CRED)||'null');
+    if(cred?.nickname && cred?.insta_id){
+      document.getElementById('aid').value=cred.nickname;
+      document.getElementById('apw').value=cred.insta_id;
+      doLogin();
+    }
+  } catch(e){}
+});
+
+document.getElementById('btnDashRefresh').addEventListener('click',loadDash);
+document.getElementById('btn-daily-d').addEventListener('click',doDailyD);
+document.getElementById('btn-wt-copy').addEventListener('click',e=>copyWarnTargets(e.currentTarget));
+
+let dashWarnTargets=[];
+let dashWeekStats=[];
+
+document.getElementById('btn-weekfail-copy').addEventListener('click', e=>{
+  const btn=e.currentTarget;
+  const failList = dashWeekStats.filter(m=>!m.is_pass);
+  if(!failList.length){ copyText('', null); showBnr('dok','현재 미달자가 없습니다','ok'); return; }
+  const partial = failList.filter(m=>m.week_participate>0);
+  const none = failList.filter(m=>m.week_participate===0);
+  const lines=[`[${document.getElementById('dwrange').textContent} 주2회 미달자]`];
+  if(partial.length){
+    lines.push(''); lines.push(`📌 참여했지만 미달 (${partial.length}명)`);
+    partial.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (${m.week_land}회${m.is_warned?' · 경고중':''})`));
+  }
+  if(none.length){
+    lines.push(''); lines.push(`📌 아예 미참여 (${none.length}명)`);
+    none.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (0회${m.is_warned?' · 경고중':''})`));
+  }
+  copyText(lines.join('\n'), btn);
+});
+
+function copyWarnTargets(btn){
+  if(!dashWarnTargets.length){ showBnr('dok','복사할 미착륙자가 없습니다'); return; }
+  const byRoom={};
+  dashWarnTargets.forEach(p=>{
+    const key=`#${p.room_number}`;
+    if(!byRoom[key]) byRoom[key]=[];
+    byRoom[key].push(`${p.already_warned?'✓ ':''}${p.nickname} @${p.insta_id}`);
+  });
+  const lines=[`[${document.getElementById('ddate').textContent} 미착륙자]`];
+  Object.keys(byRoom).sort().forEach(k=>{
+    lines.push(''); lines.push(`📍 ${k}`);
+    byRoom[k].forEach(l=>lines.push('- '+l));
+  });
+  copyText(lines.join('\n'), btn);
+}
+
+async function loadDash(){
+  document.getElementById('wkl').innerHTML='<div class="empty"><span class="sp spd"></span></div>';
+  const d=await api('get_daily'); if(!d.ok)return;
+  const rs=d.room_stats||[],wt=d.warn_targets||[],ws=d.week_stats||[];
+  dashWarnTargets=wt;
+  dashWeekStats=ws;
+  document.getElementById('ddate').textContent=d.date||'';
+  document.getElementById('dwrange').textContent=d.week_range||'';
+  document.getElementById('ds-r').textContent=rs.length;
+  document.getElementById('ds-j').textContent=rs.reduce((s,r)=>s+r.total,0);
+  document.getElementById('ds-l').textContent=rs.reduce((s,r)=>s+r.landed_count,0);
+  const pendingWt=wt.filter(p=>!p.already_warned);
+  document.getElementById('ds-w').textContent=pendingWt.length;
+  const wtc=document.getElementById('wt-card');
+  if(wt.length){
+    wtc.style.display='';
+    document.getElementById('wt-list').innerHTML=wt.map(p=>`<div class="pr"><div class="av">${lt(p.nickname)}</div><div style="flex:1;margin-left:8px"><div style="font-size:12px;font-weight:600">${p.nickname} <span style="font-size:10px;color:var(--text3);font-weight:400">#${p.room_number}</span></div><div style="font-size:11px;color:var(--text3)">@${p.insta_id}</div></div>${p.already_warned?'<span class="badge bdg">✓ 처리완료</span>':'<span class="badge bdm">미착륙</span>'}</div>`).join('');
+  } else wtc.style.display='none';
+  const wpass=ws.filter(m=>m.is_pass).length;
+  document.getElementById('ds-wp').textContent=wpass;
+  document.getElementById('ds-wf').textContent=ws.length-wpass;
+  document.getElementById('ds-ww').textContent=ws.filter(m=>m.is_warned).length;
+  const row=m=>{
+    const pct=Math.min(100,Math.round((m.week_land/2)*100));
+    const bc=m.is_pass?'var(--green)':m.week_land>0?'var(--amber)':'var(--red)';
+    return `<div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <div style="min-width:80px;font-size:12px;font-weight:600">${m.nickname}</div>
+      <div style="min-width:90px;font-size:11px;color:var(--text3)">@${m.insta_id}</div>
+      <div class="wb" style="margin:0 8px"><div class="wbi" style="width:${pct}%;background:${bc}"></div></div>
+      <div style="font-size:12px;font-weight:700;min-width:26px;text-align:right">${m.week_land}회</div>
+      <div style="margin-left:5px">${m.is_pass?'<span class="badge bdk">통과</span>':'<span class="badge bdm">미달</span>'}${m.is_warned?' <span class="badge bdr">경고</span>':''}</div>
+    </div>`;
+  };
+  const inPart=ws.filter(m=>m.week_participate>0), noPart=ws.filter(m=>m.week_participate===0);
+  const inPartTitle = inPart.length
+    ? `<div style="padding:8px 14px;font-size:12px;font-weight:700;color:var(--text2);background:var(--bg);border-bottom:1px solid var(--border)">📌 이번주 참여 있음 (${inPart.length}명) — 착륙 횟수순</div>`
+    : '';
+  document.getElementById('wkl').innerHTML=inPartTitle+inPart.map(row).join('')
+    +(noPart.length?`<details style="border-top:1px solid var(--border)"><summary style="padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2)">📌 이번주 참여 0회 — 미참여 (${noPart.length}명) · 클릭해서 펼치기</summary>${noPart.map(row).join('')}</details>`:'');
+  loaded.dashboard=true;
+}
+
+async function doDailyD(){
+  if(!await iconfirm('일간 정산 실행할까요?'))return;
+  btnLoad('btn-daily-d',true);
+  const d=await api('run_daily',{admin_id:adminInfo.admin_id});
+  btnLoad('btn-daily-d',false,'일간 정산');
+  if(d.ok){showBnr('dok','일간 정산 완료 — 경고 '+d.warned+'명'+(d.skipped?` · 중복스킵 ${d.skipped}명`:''),'ok');loadDash();}
+  else showBnr('derr',d.error||'실패');
+}
+
+let roomsView = { mode: 'today', label: '' };
+
+document.getElementById('btnARRefresh').addEventListener('click',()=>loadRoomsView());
+document.getElementById('btnRFToday').addEventListener('click',()=>{
+  if(rfwDebounceTimer) clearTimeout(rfwDebounceTimer);
+  document.getElementById('rfw').value='';
+  document.getElementById('rfd').value='';
+  roomsView.mode='today';
+  loadRoomsView();
+});
+document.getElementById('rfd').addEventListener('input',()=>{
+  document.getElementById('rfw').value='';
+  const v=document.getElementById('rfd').value;
+  roomsView.mode = v ? 'search' : 'today';
+  loadRoomsView();
+});
+let rfwDebounceTimer=null;
+document.getElementById('rfw').addEventListener('input',()=>{
+  document.getElementById('rfd').value='';
+  if(rfwDebounceTimer) clearTimeout(rfwDebounceTimer);
+  rfwDebounceTimer=setTimeout(()=>{
+    const v=document.getElementById('rfw').value.trim();
+    roomsView.mode = v ? 'search' : 'today';
+    loadRoomsView();
+  }, 500);
+});
+document.getElementById('btnRFWThis').addEventListener('click',()=>{
+  if(rfwDebounceTimer) clearTimeout(rfwDebounceTimer);
+  document.getElementById('rfw').value=thisWeekKey();
+  document.getElementById('rfd').value='';
+  roomsView.mode='search';
+  loadRoomsView();
+});
+document.getElementById('btn-preset-all').addEventListener('click',doAllPresets);
+document.getElementById('btnOpenCR').addEventListener('click',openCR);
+document.getElementById('btnCRClose').addEventListener('click',()=>closeModal('mcr'));
+document.getElementById('btnCR').addEventListener('click',doCreateRoom);
+document.getElementById('btnERClose').addEventListener('click',()=>closeModal('mer'));
+document.getElementById('btnER').addEventListener('click',doUpdateRoom);
+document.getElementById('ichips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;c.classList.toggle('on');document.getElementById('sitems').textContent=[...document.querySelectorAll('#ichips .chip.on')].map(x=>x.textContent).join(',')||'없음';});
+document.getElementById('echips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;c.classList.toggle('on');});
+
+const stBadge=s=>s==='locked'?'<span class="badge bdr">잠금</span>':s==='warned'?'<span class="badge bdm">경고</span>':s==='inactive'?'<span class="badge bdg">비활성</span>':'<span class="badge bdk">활성</span>';
+
+async function loadRoomsView(){
+  const el=document.getElementById('rooms-list');
+  const titleEl=document.getElementById('roomsListTitle');
+  el.innerHTML='<div class="empty"><span class="sp spd"></span></div>';
+
+  let body, emptyLabel;
+  if(roomsView.mode==='today'){
+    body={room_date:td()};
+    titleEl.textContent='오늘의 비행기';
+    emptyLabel='오늘 생성된 룸 없음';
+  } else {
+    const wf=document.getElementById('rfw')?.value.trim()||'';
+    const df=document.getElementById('rfd')?.value||'';
+    if(!wf && !df){ roomsView.mode='today'; return loadRoomsView(); }
+    body = wf ? {week_key:wf} : {room_date:df};
+    titleEl.textContent = wf ? `${wf} 주차 룸 목록` : `${df} 룸 목록`;
+    emptyLabel = `${wf?wf+' 주차':df}에 생성된 룸 없음`;
+  }
+
+  const d=await api('get_all_rooms',body);
+  roomCache=d.rooms||[];
+  if(!roomCache.length){el.innerHTML=`<div class="empty">${emptyLabel}</div>`;return;}
+  el.innerHTML='<table class="tbl"><thead><tr><th>날짜</th><th>#</th><th>품앗이</th><th>티켓팅</th><th>착륙</th><th>인원</th><th>상태</th><th></th></tr></thead><tbody>'
+    +roomCache.map(r=>`<tr><td style="font-weight:600">${r.room_date}</td><td>#${r.room_number}</td><td>${(r.items||'').split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}</td><td style="font-size:11px;white-space:nowrap">${r.ticket_start_fmt||''} ~ ${r.ticket_end_fmt||''}</td><td style="font-size:11px;white-space:nowrap">${r.land_start_fmt||''} ~ ${r.land_end_fmt||''}</td><td>${r.joined}/${Number(r.max_members)>=9999?"무제한":r.max_members}(+${(r.total_joined||r.joined)-r.joined}운영진)</td><td>${r.status==='open'?'<span class="badge bdk">open</span>':'<span class="badge bdg">closed</span>'}</td><td><div class="act-cell"><button class="btn bo bsm" data-action="mon" data-rid="${r.room_id}">현황</button><button class="btn bo bsm" data-action="edit" data-rid="${r.room_id}">수정</button><button class="btn bsm btn-danger" data-action="del" data-rid="${r.room_id}" data-date="${r.room_date}" data-num="${r.room_number}">삭제</button></div></td></tr>`).join('')+'</tbody></table>';
+}
+
+document.getElementById('btnRoomsCopyAll').addEventListener('click', async e=>{
+  const btn=e.currentTarget;
+  if(!roomCache.length){ showBnr('rerr','복사할 룸이 없습니다'); setTimeout(()=>hideBnr('rerr'),2000); return; }
+  const orig=btn.innerHTML;
+  btn.disabled=true; btn.innerHTML='<span class="sp"></span> 취합 중...';
+  try{
+    const batch = await api('get_room_details_batch',{room_ids: roomCache.map(r=>r.room_id)});
+    if(!batch.ok) throw new Error(batch.error||'조회 실패');
+    const details = batch.rooms||[];
+    const lines=[`[${document.getElementById('roomsListTitle').textContent}]`];
+    details.forEach(d=>{
+      const room=d.room, parts=d.participants||[];
+      const landed=parts.filter(p=>p.status==='landed'), notLanded=parts.filter(p=>p.status!=='landed');
+      lines.push(''); lines.push(`📍 ${room.room_date} #${room.room_number} — 착륙 ${landed.length}/${parts.length}`);
+      landed.forEach(p=>lines.push(`- ${p.nickname} @${p.insta_id}${p.post_url?' '+p.post_url:' (링크없음)'}`));
+      if(notLanded.length){
+        lines.push(`  ⚠ 미착륙 ${notLanded.length}명`);
+        notLanded.forEach(p=>lines.push(`  - ${p.nickname} @${p.insta_id}${p.post_url?' '+p.post_url:' (링크없음)'}`));
+      }
+    });
+    copyText(lines.join('\n'), null);
+    btn.innerHTML='✓ 복사됨!';
+  }catch(err){
+    showBnr('rerr','복사 중 오류 발생'); setTimeout(()=>hideBnr('rerr'),2000);
+    btn.innerHTML=orig;
+  }finally{
+    setTimeout(()=>{ btn.disabled=false; btn.innerHTML=orig; }, 1500);
+  }
+});
+
+
+['rooms-list'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    const btn=e.target.closest('[data-action]');if(!btn)return;
+    const{action,rid,date,num}=btn.dataset;
+    if(action==='mon'){openRoomHistory(rid);}
+    if(action==='edit'){const r=roomCache.find(x=>x.room_id===rid);if(r)openER(r);else api('get_all_rooms').then(d=>{roomCache=d.rooms||[];const ro=roomCache.find(x=>x.room_id===rid);if(ro)openER(ro);});}
+    if(action==='del') doDeleteRoom(rid,date,num);
+  });
+});
+
+document.getElementById('btnRHClose').addEventListener('click',()=>closeModal('mrh'));
+let rhCurrent=null;
+document.getElementById('btnRHCopy').addEventListener('click',e=>{
+  if(!rhCurrent){ return; }
+  const {room, parts} = rhCurrent;
+  const landed=parts.filter(p=>p.status==='landed'), notLanded=parts.filter(p=>p.status!=='landed');
+  const lines=[`[${room.room_date} #${room.room_number} 참여현황]`];
+  lines.push(`✓ 착륙 완료 (${landed.length}명)`);
+  landed.forEach(p=>lines.push(`- ${p.nickname} @${p.insta_id}${p.post_url?' '+p.post_url:' (링크없음)'}`));
+  if(notLanded.length){
+    lines.push(''); lines.push(`⚠ 미착륙 (${notLanded.length}명)`);
+    notLanded.forEach(p=>lines.push(`- ${p.nickname} @${p.insta_id}${p.post_url?' '+p.post_url:' (링크없음)'}`));
+  }
+  copyText(lines.join('\n'), e.currentTarget);
+});
+async function openRoomHistory(rid){
+  rhCurrent=null;
+  document.getElementById('rhTitle').textContent='룸 상세';
+  document.getElementById('rhBody').innerHTML='<div class="empty"><span class="sp spd"></span></div>';
+  openModal('mrh');
+  const d=await api('get_room_detail',{room_id:rid});
+  if(!d.ok){document.getElementById('rhBody').innerHTML=`<div class="empty">${d.error||'불러오기 실패'}</div>`;return;}
+  const room=d.room, parts=d.participants||[];
+  rhCurrent={room, parts};
+  document.getElementById('rhTitle').textContent=`${room.room_date} #${room.room_number} 상세`;
+  const icon={normal:'',excellent:'⭐',honorary:'🏅',staff:'🎖'};
+  const landed=parts.filter(p=>p.status==='landed'), notLanded=parts.filter(p=>p.status!=='landed');
+  document.getElementById('rhBody').innerHTML=`
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      🎫 ${room.ticket_start_fmt||''} ~ ${room.ticket_end_fmt||''} &nbsp; 🛬 ${room.land_start_fmt||''} ~ ${room.land_end_fmt||''}
+      &nbsp; ${(room.items||'').split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">✓ 착륙 완료 (${landed.length}명)</div>
+    ${landed.length?landed.map(p=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="font-weight:600;min-width:70px">${p.nickname}</span>
+        <span style="color:var(--text3);min-width:110px">@${p.insta_id}</span>
+        <span>${icon[p.ticket_type||'normal']||''}</span>
+        ${p.post_url?`<a href="${p.post_url}" target="_blank" style="color:var(--primary);word-break:break-all">${p.post_url}</a>`:'<span style="color:var(--text3)">링크없음</span>'}
+      </div>`).join(''):'<div class="empty" style="padding:10px">없음</div>'}
+    ${notLanded.length?`
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin:12px 0 6px">⚠ 미착륙 (${notLanded.length}명)</div>
+    ${notLanded.map(p=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="font-weight:600;min-width:70px">${p.nickname}</span>
+        <span style="color:var(--text3);min-width:110px">@${p.insta_id}</span>
+        ${p.post_url?`<a href="${p.post_url}" target="_blank" style="color:var(--primary);word-break:break-all">${p.post_url}</a>`:'<span style="color:var(--text3)">링크없음</span>'}
+      </div>`).join('')}`:''}
+    ${!parts.length?'<div class="empty" style="padding:16px">참여자 없음</div>':''}
+  `;
+}
+
+async function openCR(){
+  document.getElementById('crd').value=td();
+  const todayRooms = roomsView.mode==='today' ? roomCache : (await api('get_all_rooms',{room_date:td()})).rooms||[];
+  document.getElementById('crn').value=todayRooms.length+1;
+  document.querySelectorAll('#ichips .chip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('sitems').textContent='없음';
+  document.getElementById('crmo').value='';
+  hideBnr('crerr');openModal('mcr');
+}
+function openER(r){
+  document.getElementById('erid').value=r.room_id;
+  document.getElementById('erdate').value=r.room_date;
+  document.getElementById('ermax').value=r.max_members;
+  document.getElementById('erst').value=r.status||'open';
+  document.getElementById('ermo').value=r.memo||'';
+  const to=s=>s?String(s).replace(/.*(\d{2}:\d{2}).*/,'$1'):'';
+  document.getElementById('erts').value=to(r.ticket_start);
+  document.getElementById('erte').value=to(r.ticket_end);
+  document.getElementById('erls').value=to(r.land_start);
+  document.getElementById('erle').value=to(r.land_end);
+  const sel=(r.items||'').split(',').map(s=>s.trim());
+  document.querySelectorAll('#echips .chip').forEach(c=>c.classList.toggle('on',sel.includes(c.textContent.trim())));
+  hideBnr('ererr');openModal('mer');
+}
+async function doCreateRoom(){
+  hideBnr('crerr');
+  const date=document.getElementById('crd').value,num=document.getElementById('crn').value;
+  const ts=document.getElementById('crts').value,te=document.getElementById('crte').value;
+  const ls=document.getElementById('crls').value,le=document.getElementById('crle').value;
+  const items=[...document.querySelectorAll('#ichips .chip.on')].map(c=>c.textContent).join(',');
+  const memo=document.getElementById('crmo').value,max=document.getElementById('crm').value;
+  if(!date||!ts||!te||!ls||!le){showBnr('crerr','날짜와 시간을 입력해주세요');return;}
+  if(!items){showBnr('crerr','품앗이 항목을 선택해주세요');return;}
+  const teD=te<=ts?nd(date):date,lsD=ls<ts?nd(date):date,leD=le<=ls?nd(lsD):lsD;
+  btnLoad('btnCR',true);
+  const d=await api('create_room',{admin_id:adminInfo.admin_id,room_date:date,room_number:Number(num),items,max_members:Number(max),ticket_start:date+' '+ts,ticket_end:teD+' '+te,land_start:lsD+' '+ls,land_end:leD+' '+le,memo});
+  btnLoad('btnCR',false,'생성');
+  if(!d.ok){showBnr('crerr',d.error||'실패');return;}
+  closeModal('mcr');showBnr('rok','룸 생성 완료','ok');loadRoomsView();
+}
+async function doUpdateRoom(){
+  hideBnr('ererr');
+  const rid=document.getElementById('erid').value,date=document.getElementById('erdate').value;
+  const ts=document.getElementById('erts').value,te=document.getElementById('erte').value;
+  const ls=document.getElementById('erls').value,le=document.getElementById('erle').value;
+  const items=[...document.querySelectorAll('#echips .chip.on')].map(c=>c.textContent).join(',');
+  if(!items){showBnr('ererr','품앗이 항목을 선택해주세요');return;}
+  const teD=te<=ts?nd(date):date,lsD=ls<ts?nd(date):date,leD=le<=ls?nd(lsD):lsD;
+  btnLoad('btnER',true);
+  const d=await api('update_room',{room_id:rid,items,max_members:Number(document.getElementById('ermax').value),memo:document.getElementById('ermo').value,status:document.getElementById('erst').value,ticket_start:date+' '+ts,ticket_end:teD+' '+te,land_start:lsD+' '+ls,land_end:leD+' '+le});
+  btnLoad('btnER',false,'수정 완료');
+  if(!d.ok){showBnr('ererr',d.error||'실패');return;}
+  closeModal('mer');showBnr('rok','수정 완료','ok');loadRoomsView();
+}
+async function doDeleteRoom(rid,date,num){
+  if(!await iconfirm(`${date} #${num} 룸 삭제?`,true))return;
+  const d=await api('delete_room',{room_id:rid});
+  if(d.ok){showBnr('rok','삭제 완료','ok');loadRoomsView();}
+  else showBnr('rerr',d.error||'실패');
+}
+async function doAllPresets(){
+  if(!await iconfirm(`오늘(${td()}) 프리셋 6종 생성할까요?`))return;
+  const btn=document.getElementById('btn-preset-all');
+  btn.disabled=true;
+  let ok=0,skip=0,fail=[];
+  for(const p of PRESETS){
+    btn.innerHTML=`<span class="sp"></span> ${ok+skip+fail.length+1}/6 생성 중...`;
+    const d=await api('create_preset',{admin_id:adminInfo.admin_id,preset_num:p.num,room_date:td()});
+    if(d.ok)ok++;else if(d.error?.includes('이미'))skip++;else fail.push(p.num+'번');
+  }
+  btn.disabled=false;
+  btn.innerHTML='⚡ 프리셋 6종';
+  showBnr('rok',`생성 ${ok}개${skip?` · 건너뜀 ${skip}개`:''}${fail.length?` · 실패 ${fail.join(',')}`:''}`,'ok');
+  loadRoomsView();
+}
+
+document.getElementById('btnMonRefresh').addEventListener('click',()=>loadMon());
+document.getElementById('btnMonCopyAll').addEventListener('click',e=>copyAllNoLand(e.currentTarget));
+
+function copyAllNoLand(btn){
+  if(!monStats.length){ showBnr('sok','불러온 룸이 없습니다'); return; }
+  const lines=[`[${td()} 미착륙자 전체]`];
+  let total=0;
+  monStats.forEach(r=>{
+    const nl=(r.participants||[]).filter(p=>p.status!=='landed');
+    if(!nl.length) return;
+    lines.push(''); lines.push(`📍 #${r.room_number} (${(r.items||'').split(',').join('/')})`);
+    nl.forEach(p=>{ lines.push(`- ${p.nickname} @${p.insta_id}`); total++; });
+  });
+  if(!total){ showBnr('sok','현재 미착륙자가 없습니다','ok'); return; }
+  copyText(lines.join('\n'), btn);
+}
+
+async function loadMon(){
+  const el=document.getElementById('mon-content');
+  el.innerHTML='<div class="empty"><span class="sp spd"></span></div>';
+  const d=await api('get_daily');
+  if(!d.ok){el.innerHTML='<div class="empty">불러오기 실패</div>';return;}
+  const rs=d.room_stats||[];
+  if(!rs.length){el.innerHTML='<div class="empty">오늘 비행기가 없습니다</div>';return;}
+  monStats=rs;
+  const icon={normal:'',excellent:'⭐',honorary:'🏅',staff:'🎖'};
+
+  el.innerHTML=rs.map((r,ri)=>{
+    const parts=r.participants||[], nl=r.no_land_list||[];
+    const landed=parts.filter(p=>p.status==='landed');
+    const notLanded=parts.filter(p=>p.status!=='landed');
+    const isClosed=r.is_land_closed;
+    const isSettled=r.is_settled;
+    const stateBadge = isSettled
+      ? '<span class="badge bdg" style="margin-left:4px">✓ 정산완료</span>'
+      : isClosed
+        ? '<span class="badge bdr" style="margin-left:4px">착륙마감 · 정산대기</span>'
+        : '<span class="badge bdk" style="margin-left:4px">진행중</span>';
+    const bulkWarnLabel = isSettled ? '⚠ 경고 재부여(예외처리)' : `⚠ 경고 부여 (${notLanded.length}명)`;
+
+    return `<div class="rca">
+      <div class="rcah">
+        <div>
+          <div style="font-size:14px;font-weight:700">
+            #${r.room_number} ${(r.items||'').split(',').map(t=>`<span class="tag">${t.trim()}</span>`).join('')}
+            ${stateBadge}
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">
+            🎫 ${r.ticket_start_fmt||''} ~ ${r.ticket_end_fmt||''}
+            &nbsp;🛬 ${r.land_start_fmt||''} ~ ${r.land_end_fmt||''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:22px;font-weight:800;color:${isClosed?'var(--green)':'var(--text)'}">${landed.length}<span style="font-size:13px;font-weight:400;color:var(--text3)">/${parts.length}</span></div>
+          <div style="font-size:11px;color:var(--text3)">착륙/참여</div>
+        </div>
+      </div>
+
+      ${notLanded.length?`
+      <div style="background:${isClosed?'var(--red-bg)':'var(--amber-bg)'};border-bottom:1px solid ${isClosed?'#FECACA':'#FDE68A'};padding:8px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:700;color:${isClosed?'var(--red)':'var(--amber)'}">
+            ${isClosed?'⚠ 미착륙 — 경고 대상':'⏳ 착륙 미완료'}
+            <span style="font-weight:400">(${notLanded.length}명)</span>
+          </div>
+          <div style="display:flex;gap:5px">
+            <button class="btn bsm" style="background:transparent;border:1px solid ${isClosed?'var(--red)':'var(--amber)'};color:${isClosed?'var(--red)':'var(--amber)'}" 
+              data-action="cp-nl" data-ri="${ri}">📋 닉네임 복사</button>
+            ${isClosed?`<button class="btn bsm bred" data-action="warn-nl" data-ri="${ri}">${bulkWarnLabel}</button>`:''}
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${notLanded.map(p=>`
+            <div style="display:flex;align-items:center;gap:4px;background:#fff;border-radius:6px;padding:3px 8px;font-size:12px">
+              <span style="font-weight:600">${p.nickname}</span>
+              <span style="color:var(--text3)">@${p.insta_id}</span>
+              ${p.already_warned?'<span class="badge bdg" style="font-size:9px">✓ 경고완료</span>':''}
+              ${p.post_url?`<a href="${p.post_url}" target="_blank" style="font-size:10px;color:var(--primary)">링크</a>`:'<span style="font-size:10px;color:var(--text3)">링크없음</span>'}
+              <button class="btn bsm" style="padding:1px 5px;font-size:10px"
+                data-action="edit-link" data-rid="${r.room_id}" data-mid="${p.member_id}" data-nick="${p.nickname}" data-url="${(p.post_url||'').replace(/"/g,'&quot;')}">✏</button>
+              <button class="btn bsm" style="padding:1px 6px;font-size:10px" 
+                data-action="land" data-rid="${r.room_id}" data-mid="${p.member_id}" data-nick="${p.nickname}">🛬</button>
+              <button class="btn bsm btn-danger" style="padding:1px 6px;font-size:10px"
+                data-action="del-p" data-rid="${r.room_id}" data-mid="${p.member_id}" data-nick="${p.nickname}">✕</button>
+            </div>`).join('')}
+        </div>
+      </div>`:''}
+
+      ${landed.length?`
+      <div style="padding:6px 14px;border-bottom:${notLanded.length?'0':'1px solid var(--border)'}">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">✓ 착륙 완료 (${landed.length}명)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px">
+          ${landed.map(p=>`
+            <div style="display:flex;align-items:center;gap:3px;background:var(--green-bg);border-radius:6px;padding:2px 8px;font-size:11px">
+              <span style="font-weight:600">${p.nickname}</span>
+              ${icon[p.ticket_type||'normal']?`<span>${icon[p.ticket_type]}</span>`:''}
+              ${p.post_url?`<a href="${p.post_url}" target="_blank" style="color:var(--primary);font-size:10px">링크</a>`:'<span style="font-size:10px;color:var(--text3)">링크없음</span>'}
+              <button class="btn bsm" style="padding:1px 5px;font-size:10px"
+                data-action="edit-link" data-rid="${r.room_id}" data-mid="${p.member_id}" data-nick="${p.nickname}" data-url="${(p.post_url||'').replace(/"/g,'&quot;')}">✏</button>
+              <button class="btn bsm btn-danger" style="padding:1px 5px;font-size:10px"
+                data-action="del-p" data-rid="${r.room_id}" data-mid="${p.member_id}" data-nick="${p.nickname}">✕</button>
+            </div>`).join('')}
+        </div>
+      </div>`:''}
+
+      ${!parts.length?'<div class="empty" style="padding:14px;font-size:12px">아직 탑승자 없음</div>':''}
+    </div>`;
+  }).join('');
+  loaded.monitor=true;
+}
+
+document.getElementById('mon-content').addEventListener('click',async e=>{
+  const btn=e.target.closest('[data-action]');if(!btn)return;
+  const{action,rid,mid,nick,ri}=btn.dataset;
+
+  if(action==='cp-nl'){ cpNoLand(Number(ri)); return; }
+
+  if(action==='edit-link'){
+    if(!mid){showBnr('sok','member_id 없음');return;}
+    const curUrl=btn.dataset.url||'';
+    const input=prompt(`${nick}님의 링크를 수정합니다.\n(카톡 등에서 복사한 텍스트를 통째로 붙여넣어도 링크만 자동으로 추출됩니다)`, curUrl);
+    if(input===null) return;
+    const url=extractUrl(input);
+    if(!url){ showBnr('sok','올바른 링크(http로 시작)를 찾을 수 없습니다'); return; }
+    btn.disabled=true;
+    const d=await api('admin_update_link',{room_id:rid,member_id:mid,post_url:url});
+    if(d.ok){ showBnr('sok','링크 수정 완료','ok'); loadMon(); }
+    else { showBnr('sok',d.error||'실패'); btn.disabled=false; }
+    return;
+  }
+
+  if(action==='warn-nl'){
+    const r=monStats[Number(ri)]; if(!r) return;
+    const nl=r.no_land_list||r.participants?.filter(p=>p.status!=='landed')||[];
+    if(!nl.length){showBnr('sok','미착륙자 없음');return;}
+    if(!await iconfirm(`미착륙 ${nl.length}명에게 경고를 부여할까요? (이미 처리된 사람은 자동으로 건너뜁니다)`,true)) return;
+    btn.disabled=true; btn.textContent='경고 부여 중...';
+    let ok=0,dup=0,fail=[];
+    for(const p of nl){
+      if(!p.member_id){fail.push(p.nickname);continue;}
+      const d=await api('manual_warn',{
+        member_id:p.member_id,
+        room_id:r.room_id,
+        admin_nickname:adminInfo.nickname,
+        reason:`착륙 미완료 — ${r.room_date||''} #${r.room_number}`
+      });
+      if(d.ok) ok++; else if(d.duplicate) dup++; else fail.push(p.nickname);
+    }
+    btn.disabled=false;
+    showBnr('sok',`경고 부여 완료 ${ok}명${dup?` · 이미처리 ${dup}명`:''}${fail.length?` · 실패: ${fail.join(',')}`:''}`,'ok');
+    loadMon();
+    return;
+  }
+
+  if(action==='land'){
+    if(!mid){showBnr('sok','member_id 없음');return;}
+    if(!await iconfirm(`${nick}님 착륙 처리?`))return;
+    btn.disabled=true;
+    const d=await api('admin_land',{room_id:rid,member_id:mid,admin_id:adminInfo.admin_id});
+    if(d.ok){showBnr('sok',d.message,'ok');loadMon();}
+    else{showBnr('sok',d.error||'실패');btn.disabled=false;}
+  }
+
+  if(action==='del-p'){
+    if(!mid){showBnr('sok','member_id 없음');return;}
+    if(!await iconfirm(`${nick}님 참여 기록 삭제? (복구 불가)`,true))return;
+    btn.disabled=true;
+    const d=await api('admin_delete_part',{room_id:rid,member_id:mid,admin_id:adminInfo.admin_id});
+    if(d.ok){showBnr('sok',d.message,'ok');loadMon();}
+    else{showBnr('sok',d.error||'실패');btn.disabled=false;}
+  }
+});
+
+function cpNoLand(ri){
+  const r=monStats[ri]; if(!r) return;
+  const nl=r.participants?.filter(p=>p.status!=='landed')||[];
+  if(!nl.length){showBnr('sok','미착륙자 없음');return;}
+  const txt=nl.map(p=>`${p.nickname} @${p.insta_id}`).join('\n');
+  const btn=document.querySelector(`[data-action="cp-nl"][data-ri="${ri}"]`);
+  copyText(txt, btn);
+}
+
+document.getElementById('btn-daily-s').addEventListener('click',doDailyS);
+document.getElementById('btn-weekly-s').addEventListener('click',doWeeklyS);
+document.getElementById('btn-init-week').addEventListener('click',doInitWeek);
+
+document.getElementById('btnLogHistory').addEventListener('click', loadLogHistory);
+document.getElementById('log-date').addEventListener('change', loadLogHistory);
+
+async function loadLogHistory(){
+  const dateVal = document.getElementById('log-date').value;
+  if(!dateVal) return;
+  const el = document.getElementById('log-history');
+  el.innerHTML = '<div class="empty"><span class="sp spd"></span></div>';
+  const [d, roomsD] = await Promise.all([
+    api('get_logs', {log_date: dateVal}),
+    api('get_all_rooms', {room_date: dateVal}),
+  ]);
+  if(!d.ok){el.innerHTML='<div class="empty">불러오기 실패</div>';return;}
+  const logs = d.logs||[];
+  const roomsThatDay = roomsD.rooms||[];
+
+  if(!logs.length){
+    if(!roomsThatDay.length){
+      el.innerHTML=`<div class="empty">${dateVal}에 생성된 방이 없습니다 (정상 — 정산할 대상 없음)</div>`;
+    } else {
+      const stillOpen = roomsThatDay.filter(r=>r.status==='open');
+      el.innerHTML=`<div style="padding:16px">
+        <div class="bnr bnr-w show" style="margin-bottom:10px">
+          ⚠ ${dateVal}에 방 ${roomsThatDay.length}개가 있었지만 정산 기록이 없습니다.
+          ${stillOpen.length?` (그중 ${stillOpen.length}개는 아직 open 상태 — 착륙 마감 전이거나 정산 트리거가 아직 실행되지 않았을 수 있습니다)`:' 방은 모두 마감(closed) 상태인데 정산 로그가 없어 확인이 필요합니다.'}
+        </div>
+        <table class="tbl"><thead><tr><th>룸</th><th>상태</th><th>착륙마감</th></tr></thead><tbody>
+        ${roomsThatDay.map(r=>`<tr><td>#${r.room_number}</td><td>${r.status==='open'?'<span class="badge bdk">open</span>':'<span class="badge bdg">closed</span>'}</td><td style="font-size:11px">${r.land_end_fmt||''}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`;
+    }
+    return;
+  }
+  const settles = logs.filter(l=>l.log_type==='daily_settle');
+  const warns   = logs.filter(l=>l.log_type==='daily_warn');
+  const skips   = logs.filter(l=>l.log_type==='daily_settle_skip');
+  el.innerHTML = `
+    <div style="padding:14px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">${dateVal} 일간 정산 결과</div>
+      ${settles.map(s=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 14px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700">${s.room_date||''} #${s.room_number||''}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">${s.detail||''}</div>
+        </div>`).join('')}
+      ${warns.length?`
+        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--red)">⚠ 경고 부여 (${warns.length}명)</span>
+          <button class="btn bo bsm" id="btn-warns-copy">📋 복사</button>
+        </div>
+        <table class="tbl"><thead><tr><th>닉네임</th><th>아이디</th><th>룸</th><th>시각</th></tr></thead><tbody>
+        ${warns.map(w=>`<tr>
+          <td style="font-weight:600">${w.nickname||''}</td>
+          <td style="font-size:12px;color:var(--text2)">@${w.insta_id||''}</td>
+          <td style="font-size:11px">${w.room_date||''} #${w.room_number||''}</td>
+          <td style="font-size:11px;color:var(--text2)">${w.created_at||''}</td>
+        </tr>`).join('')}
+        </tbody></table>`:'<div style="font-size:12px;color:var(--green);margin-top:8px">✅ 경고 부여 없음</div>'}
+    </div>`;
+  if(warns.length){
+    document.getElementById('btn-warns-copy').addEventListener('click',e=>{
+      const txt=`[${dateVal} 경고 부여 명단]\n`+warns.map(w=>`${w.nickname} @${w.insta_id} (#${w.room_number})`).join('\n');
+      copyText(txt, e.currentTarget);
+    });
+  }
+}
+
+function loadSI(){
+  const now=new Date(),day=now.getDay(),tm=day===0?-6:1-day,mon=new Date(now);
+  mon.setDate(now.getDate()+tm);mon.setHours(10,0,0,0);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(22,0,0,0);
+  const f=d=>`${d.getMonth()+1}/${d.getDate()} ${('0'+d.getHours()).slice(-2)}:00`;
+  document.getElementById('sinfo').innerHTML=`주간: <strong>${f(mon)} ~ ${f(sun)}</strong> · 필참 2회`;
+}
+async function doDailyS(){
+  if(!await iconfirm('일간 정산 실행할까요?'))return;
+  btnLoad('btn-daily-s',true);
+  const d=await api('run_daily',{admin_id:adminInfo.admin_id});
+  btnLoad('btn-daily-s',false,'일간 정산 실행');
+  if(d.ok)showBnr('skok',`일간 정산 완료 — 경고 ${d.warned}명${d.skipped?` · 중복스킵 ${d.skipped}명`:''}`,'ok');
+  else showBnr('serr',d.error||'실패');
+}
+async function doWeeklyS(){
+  if(!await iconfirm('주간 정산 실행할까요? (경고·우수명예 초기화)'))return;
+  btnLoad('btn-weekly-s',true);
+  const d=await api('run_weekly',{admin_id:adminInfo.admin_id});
+  btnLoad('btn-weekly-s',false,'주간 정산 실행');
+  if(!d.ok){showBnr('serr',d.error||'실패');return;}
+  showBnr('skok',`완료 — 통과 ${d.passed}명 · 경고 ${d.warned}명${d.already_warned?` · 이미처리 ${d.already_warned}명`:''} · 우수초기화 ${d.reset_excellent||0} · 명예초기화 ${d.reset_honorary||0}`,'ok');
+  const list = d.warned_list||[];
+  document.getElementById('sresult').innerHTML=`<div class="card"><div class="ch"><span class="ct">${d.week_key} 결과</span>${list.length?'<button class="btn bo bsm" id="btn-weeklys-copy">📋 미달자 복사</button>':''}</div><div class="cb"><div style="font-size:12px;color:var(--text2);margin-bottom:8px">경고 이월: ${d.carry_over_warns}건</div>${list.length?`<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">⚠ 주 2회 미달 경고 (${list.length}명)</div><div style="font-size:12px;color:var(--text2)">${list.join(', ')}</div>`:'<div style="font-size:12px;color:var(--green)">✅ 이번 정산에서 미달자 없음</div>'}</div></div>`;
+  if(list.length){
+    document.getElementById('btn-weeklys-copy').addEventListener('click', e=>{
+      const lines=[`[${d.week_key||''} 주2회 미달 경고자]`, ...list.map(n=>`- ${n}`)];
+      copyText(lines.join('\n'), e.currentTarget);
+    });
+  }
+}
+async function doInitWeek(){
+  if(!await iconfirm('이번주 시트를 초기화할까요?\n기존 기록이 삭제됩니다.',true))return;
+  btnLoad('btn-init-week',true);
+  const d=await api('init_week_sheet',{admin_id:adminInfo.admin_id,week_key:thisWeekKey()});
+  btnLoad('btn-init-week',false,'📋 이번주 시트 초기화');
+  if(d.ok)showBnr('skok',d.message,'ok');else showBnr('serr',d.error||'실패');
+}
+
+document.getElementById('btn-wk-load').addEventListener('click',loadWeekSheet);
+document.getElementById('wk-input').addEventListener('keydown',e=>{if(e.key==='Enter')loadWeekSheet();});
+
+async function loadWeekSheet(){
+  const wk=document.getElementById('wk-input').value.trim()||thisWeekKey();
+  const el=document.getElementById('week-sheet-content');
+  el.innerHTML='<div class="empty"><span class="sp spd"></span></div>';
+  const d=await api('get_week_sheet',{week_key:wk});
+  if(!d.ok){el.innerHTML='<div class="empty">불러오기 실패</div>';return;}
+  if(!d.headers||d.headers.length<3){
+    el.innerHTML=`<div class="empty">${wk} 시트 없음<br><span style="font-size:11px">첫 탑승 시 자동 생성됩니다</span></div>`;return;
+  }
+
+  const headers=d.headers, rows=d.rows;
+  const sumIdx=headers.indexOf('주간합계');
+
+  const markHtml=v=>{
+    if(v==='✓'||v==='⭐'||v==='🏅'||v==='🎖') return `<span class="mark-land">${v}</span>`;
+    if(v==='⚠') return `<span style="color:var(--red);font-weight:700">⚠</span>`;
+    if(v==='●') return `<span class="mark-tick">●</span>`;
+    return v||'';
+  };
+
+  el.innerHTML=`
+    <div style="padding:10px 14px;display:flex;justify-content:flex-end">
+      <button class="btn bo bsm" id="btn-wk-download">⬇ 엑셀 다운로드</button>
+    </div>
+    <div class="week-tbl-wrap">
+      <table class="week-tbl">
+        <thead><tr>${headers.map((h,i)=>`<th style="${i<2?'min-width:80px':'min-width:55px'}${i===sumIdx?' background:var(--green-bg);color:var(--green)':''}">${h}</th>`).join('')}</tr></thead>
+        <tbody id="week-tbl-body"></tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('btn-wk-download').onclick=()=>downloadWeekSheet(wk, headers, rows);
+
+  const tbody=document.getElementById('week-tbl-body');
+  const CHUNK=50; let idx=0;
+  function renderChunk(){
+    const frag=document.createDocumentFragment();
+    const end=Math.min(idx+CHUNK, rows.length);
+    for(;idx<end;idx++){
+      const r=rows[idx];
+      const tr=document.createElement('tr');
+      const hasWarn=r.some(v=>v==='⚠');
+      if(hasWarn) tr.style.background='#FFF8F8';
+      tr.innerHTML=r.map((v,i)=>{
+        const isSum=i===sumIdx;
+        return `<td${isSum?' class="mark-sum"':''}>${isSum?(v||0):markHtml(v)}</td>`;
+      }).join('');
+      frag.appendChild(tr);
+    }
+    tbody.appendChild(frag);
+    if(idx<rows.length) requestAnimationFrame(renderChunk);
+  }
+  requestAnimationFrame(renderChunk);
+}
+
+function downloadWeekSheet(wk, headers, rows){
+  const BOM='\uFEFF';
+  const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const lines=[headers.map(esc).join(',')];
+  rows.forEach(r=>lines.push(r.map(esc).join(',')));
+  const csv=BOM+lines.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=wk+'.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.getElementById('msrch').addEventListener('input',filterM);
+document.getElementById('msf').addEventListener('change',filterM);
+document.getElementById('btnOpenAM').addEventListener('click',openAM);
+document.getElementById('btnMBClose').addEventListener('click',()=>closeModal('mmb'));
+document.getElementById('btnMB').addEventListener('click',subMB);
+
+async function loadM(){
+  const d=await api('get_members'); memberList=d.members||[]; filterM(); loaded.members=true;
+}
+let currentList = [];
+
+function filterM(){
+  const q=document.getElementById('msrch')?.value.toLowerCase()||'';
+  const st=document.getElementById('msf')?.value||'';
+  currentList=memberList.filter(m=>(!st||m.status===st)&&(m.nickname.toLowerCase().includes(q)||m.insta_id.toLowerCase().includes(q)));
+  renderM(currentList);
+}
+
+function renderM(list){
+  const el=document.getElementById('mtbl');
+  if(!list.length){el.innerHTML='<div class="empty">멤버 없음</div>';return;}
+
+  el.innerHTML=`<table class="tbl">
+    <thead><tr><th>#</th><th>닉네임</th><th>아이디</th><th>상태</th><th>경고</th><th>우수⭐</th><th>명예🏅</th><th>마지막 로그인</th><th></th></tr></thead>
+    <tbody id="mtbl-body"></tbody>
+  </table>`;
+  const tbody=document.getElementById('mtbl-body');
+
+  const CHUNK=30;
+  let idx=0;
+  function renderChunk(){
+    const end=Math.min(idx+CHUNK, list.length);
+    const frag=document.createDocumentFragment();
+    for(;idx<end;idx++){
+      const m=list[idx], i=idx;
+      const wc=Number(m.warning_count)||0,ec=Number(m.excellent_count)||0,hc=Number(m.honorary_count)||0,mid=m.member_id;
+      const tr=document.createElement('tr');
+      tr.dataset.mid=mid;
+      tr.innerHTML=`
+        <td style="color:var(--text3)">${i+1}</td>
+        <td style="font-weight:600">${m.nickname}</td>
+        <td style="font-size:12px;color:var(--text2)">@${m.insta_id}</td>
+        <td>${stBadge(m.status)}</td>
+        <td><div style="display:flex;align-items:center;gap:3px">
+          <button class="cbtn" data-a="w-" data-mid="${mid}" ${wc<=0?'disabled':''}>−</button>
+          <span class="cv" style="${wc>0?'color:var(--red)':''}" data-f="wc">${wc}</span>
+          <button class="cbtn" data-a="w+" data-mid="${mid}">+</button>
+        </div></td>
+        <td><div style="display:flex;align-items:center;gap:3px">
+          <button class="cbtn" data-a="e-" data-mid="${mid}" ${ec<=0?'disabled':''}>−</button>
+          <span class="cv" style="${ec>0?'color:var(--primary)':''}" data-f="ec">⭐${ec}</span>
+          <button class="cbtn" data-a="e+" data-mid="${mid}">+</button>
+        </div></td>
+        <td><div style="display:flex;align-items:center;gap:3px">
+          <button class="cbtn" data-a="h-" data-mid="${mid}" ${hc<=0?'disabled':''}>−</button>
+          <span class="cv" style="${hc>0?'color:var(--purple)':''}" data-f="hc">🏅${hc}</span>
+          <button class="cbtn" data-a="h+" data-mid="${mid}">+</button>
+        </div></td>
+        <td style="font-size:11px;color:var(--text2)">${m.last_login_at||'-'}</td>
+        <td><div class="act-cell" data-mid="${mid}">
+          <button class="btn bo bsm" data-a="memo" data-mid="${mid}">메모</button>
+          ${m.status==='locked'?`<button class="btn bsm btn-success" data-a="unlock" data-mid="${mid}">잠금해제</button>`:`<button class="btn bsm btn-danger" data-a="lock" data-mid="${mid}">잠금</button>`}
+        </div></td>`;
+      frag.appendChild(tr);
+    }
+    tbody.appendChild(frag);
+    if(idx<list.length) requestAnimationFrame(renderChunk);
+  }
+  requestAnimationFrame(renderChunk);
+}
+
+function updateRow(mid){
+  const m=memberList.find(x=>x.member_id===mid); if(!m)return;
+  const tr=document.querySelector(`#mtbl-body tr[data-mid="${mid}"]`); if(!tr)return;
+  const wc=Number(m.warning_count)||0,ec=Number(m.excellent_count)||0,hc=Number(m.honorary_count)||0;
+
+  const td4=tr.children[3];
+  if(td4) td4.innerHTML=stBadge(m.status);
+
+  const wcEl=tr.querySelector('[data-f="wc"]'); if(wcEl){wcEl.textContent=wc;wcEl.style.color=wc>0?'var(--red)':'';}
+  const ecEl=tr.querySelector('[data-f="ec"]'); if(ecEl){ecEl.textContent='⭐'+ec;ecEl.style.color=ec>0?'var(--primary)':'';}
+  const hcEl=tr.querySelector('[data-f="hc"]'); if(hcEl){hcEl.textContent='🏅'+hc;hcEl.style.color=hc>0?'var(--purple)':'';}
+
+  const wb=tr.querySelector('[data-a="w-"]'); if(wb)wb.disabled=wc<=0;
+  const eb=tr.querySelector('[data-a="e-"]'); if(eb)eb.disabled=ec<=0;
+  const hb=tr.querySelector('[data-a="h-"]'); if(hb)hb.disabled=hc<=0;
+
+  const lockBtn=tr.querySelector('[data-a="lock"],[data-a="unlock"]');
+  if(lockBtn){
+    if(m.status==='locked'){lockBtn.dataset.a='unlock';lockBtn.textContent='잠금해제';lockBtn.className='btn bsm btn-success';}
+    else{lockBtn.dataset.a='lock';lockBtn.textContent='잠금';lockBtn.className='btn bsm btn-danger';}
+  }
+}
+
+document.getElementById('mtbl').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-a]');if(!btn||btn.disabled)return;
+  const{a:action,mid}=btn.dataset;if(!mid)return;
+  const m=memberList.find(x=>x.member_id===mid);
+  if(action==='memo'){openEM(m);return;}
+  if(['w+','w-','e+','e-','h+','h-'].includes(action)){doCount(action,mid,m,btn);return;}
+  if(action==='lock')   doLock(mid,'lock',btn);
+  if(action==='unlock') doLock(mid,'unlock',btn);
+});
+
+function doCount(action,mid,m,btn){
+  if(!m)return;
+  const delta=action.endsWith('+')?1:-1,type=action[0];
+  const prev={wc:m.warning_count,ec:m.excellent_count,hc:m.honorary_count,st:m.status};
+
+  if(type==='w'){
+    const cur=Number(m.warning_count)||0;
+    if(delta<0&&cur<=0)return;
+    m.warning_count=Math.max(0,cur+delta);
+    if(delta>0&&m.status==='active')m.status='warned';
+    if(delta<0&&m.warning_count===0)m.status='active';
+  } else if(type==='e'){
+    const cur=Number(m.excellent_count)||0;
+    if(delta<0&&cur<=0)return;
+    m.excellent_count=Math.max(0,cur+delta);
+  } else {
+    const cur=Number(m.honorary_count)||0;
+    if(delta<0&&cur<=0)return;
+    m.honorary_count=Math.max(0,cur+delta);
+  }
+
+  updateRow(mid);
+  const tr=btn.closest('tr');
+  const rowBtns=tr?tr.querySelectorAll('.cbtn'):[];
+  rowBtns.forEach(b=>b.disabled=true);
+  const fieldMap={w:'wc',e:'ec',h:'hc'};
+  const valEl=tr?.querySelector(`[data-f="${fieldMap[type]}"]`);
+  const origText=valEl?.textContent;
+  if(valEl) valEl.innerHTML=`${origText} <span class="sp" style="width:10px;height:10px;vertical-align:middle"></span>`;
+
+  const call=type==='w'
+    ?(delta>0
+      ?api('manual_warn',{member_id:mid,admin_nickname:adminInfo.nickname,reason:'관리자 수동 경고 +1'})
+      :api('adjust_warn',{member_id:mid,delta:-1}))
+    :type==='e'
+      ?api('adjust_excellent',{member_id:mid,delta})
+      :api('adjust_honorary',{member_id:mid,delta});
+
+  call.then(d=>{
+    if(!d.ok){
+      m.warning_count=prev.wc;m.excellent_count=prev.ec;
+      m.honorary_count=prev.hc;m.status=prev.st;
+      showBnr('merr',d.error||'실패');
+    }
+    updateRow(mid);
+    rowBtns.forEach(b=>{
+      const f=b.dataset.a;
+      if(f==='w-') b.disabled=(Number(m.warning_count)||0)<=0;
+      else if(f==='e-') b.disabled=(Number(m.excellent_count)||0)<=0;
+      else if(f==='h-') b.disabled=(Number(m.honorary_count)||0)<=0;
+      else b.disabled=false;
+    });
+  }).catch(()=>{
+    m.warning_count=prev.wc;m.excellent_count=prev.ec;
+    m.honorary_count=prev.hc;m.status=prev.st;
+    updateRow(mid);
+    rowBtns.forEach(b=>b.disabled=false);
+    showBnr('merr','네트워크 오류');
+  });
+}
+
+async function doLock(mid,lockAction,btn){
+  if(!await iconfirm(lockAction==='lock'?'잠금 처리할까요?':'잠금 해제할까요?',lockAction==='lock'))return;
+  const m=memberList.find(x=>x.member_id===mid);
+  const prev=m?.status;
+  if(m) m.status=lockAction==='lock'?'locked':(Number(m.warning_count)>0?'warned':'active');
+  updateRow(mid);
+  btn.disabled=true;
+  api('toggle_lock',{member_id:mid,lock_action:lockAction}).then(d=>{
+    if(!d.ok){
+      if(m)m.status=prev;
+      updateRow(mid);
+      showBnr('merr',d.error||'실패');
+    }
+    btn.disabled=false;
+  }).catch(()=>{
+    if(m)m.status=prev;
+    updateRow(mid);
+    showBnr('merr','오류');
+    btn.disabled=false;
+  });
+}
+
+async function doStatus(mid,newStatus,btn){
+  if(!await iconfirm(newStatus==='inactive'?'비활성 처리할까요?':'활성화할까요?',newStatus==='inactive'))return;
+  const m=memberList.find(x=>x.member_id===mid);
+  const prev=m?.status;
+  if(m) m.status=newStatus;
+  updateRow(mid);
+  btn.disabled=true;
+  api('update_member',{member_id:mid,status:newStatus}).then(d=>{
+    if(!d.ok){
+      if(m)m.status=prev;
+      updateRow(mid);
+      showBnr('merr',d.error||'실패');
+    }
+    btn.disabled=false;
+  }).catch(()=>{
+    if(m)m.status=prev;
+    updateRow(mid);
+    showBnr('merr','오류');
+    btn.disabled=false;
+  });
+}
+
+document.getElementById('btnLogRefresh').addEventListener('click', loadLogs);
+document.getElementById('btnLogSearch').addEventListener('click', loadLogs);
+
+function initLogs() {
+  const sel = document.getElementById('logm');
+  if (sel && sel.options.length <= 1 && memberList.length > 0) {
+    memberList.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.member_id;
+      opt.textContent = m.nickname + ' @' + m.insta_id;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function loadLogs() {
+  const el = document.getElementById('ltbl');
+  el.innerHTML = '<div class="empty"><span class="sp spd"></span></div>';
+  const mid = document.getElementById('logm')?.value || '';
+  const act = document.getElementById('loga')?.value || '';
+
+  const d = await api('get_parts', {member_id: mid, action: act});
+  if (!d.ok) {
+    el.innerHTML = '<div class="empty">불러오기 실패 — gs에 get_parts 액션을 추가해주세요</div>';
+    return;
+  }
+  const parts = d.parts || [];
+  if (!parts.length) { el.innerHTML = '<div class="empty">기록 없음</div>'; return; }
+  el.innerHTML = '<table class="tbl"><thead><tr><th>탑승일시</th><th>닉네임</th><th>아이디</th><th>룸</th><th>링크등록시각</th><th>착륙시각</th><th>상태</th><th>링크</th><th>수정이력</th></tr></thead><tbody>'
+    + parts.map(p => `<tr>
+      <td style="font-size:11px;white-space:nowrap;color:var(--text2)">${p.ticket_at||''}</td>
+      <td style="font-weight:600">${p.nickname||''}</td>
+      <td style="font-size:12px;color:var(--text2)">@${p.insta_id||''}</td>
+      <td style="font-size:11px">${p.room_date||''} #${p.room_number||''}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.link_at||'-'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.landed_at||'-'}</td>
+      <td>${p.status==='landed'?'<span class="badge bdk">착륙✓</span>':'<span class="badge bdb">탑승</span>'}</td>
+      <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${p.post_url?`<a href="${p.post_url}" target="_blank" style="color:var(--primary)">${p.post_url}</a>`:'<span style="color:var(--text3)">-</span>'}
+      </td>
+      <td style="font-size:10px;color:var(--amber);white-space:pre-line;max-width:160px">${p.link_history||''}</td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+function openAM(){
+  editMemberId=null;
+  document.getElementById('mmbt').textContent='멤버 등록';
+  document.getElementById('btnMB').textContent='등록 완료';
+  document.getElementById('mmb-fields').style.display='';
+  document.getElementById('amnk').value='';
+  document.getElementById('amin').value='';
+  document.getElementById('ammo').value='';
+  hideBnr('mberr');openModal('mmb');
+}
+function openEM(m){
+  if(!m)return;
+  editMemberId=m.member_id;
+  document.getElementById('mmbt').textContent=m.nickname+' 메모 수정';
+  document.getElementById('btnMB').textContent='수정 완료';
+  document.getElementById('mmb-fields').style.display='none';
+  document.getElementById('ammo').value=m.memo||'';
+  hideBnr('mberr');openModal('mmb');
+}
+async function subMB(){
+  hideBnr('mberr');
+  const memo=document.getElementById('ammo').value;
+  if(!editMemberId){
+    const nick=document.getElementById('amnk').value.trim(),insta=document.getElementById('amin').value.trim();
+    if(!nick||!insta){showBnr('mberr','닉네임과 아이디는 필수');return;}
+    btnLoad('btnMB',true);
+    const d=await api('add_member',{nickname:nick,insta_id:insta,memo});
+    btnLoad('btnMB',false,'등록 완료');
+    if(!d.ok){showBnr('mberr',d.error||'실패');return;}
+    closeModal('mmb');showBnr('mok','등록 완료','ok');loadM();
+  } else {
+    btnLoad('btnMB',true);
+    const d=await api('update_member',{member_id:editMemberId,memo});
+    btnLoad('btnMB',false,'수정 완료');
+    if(!d.ok){showBnr('mberr',d.error||'실패');return;}
+    const m=memberList.find(x=>x.member_id===editMemberId);if(m)m.memo=memo;
+    closeModal('mmb');showBnr('mok','메모 수정 완료','ok');
+  }
+}
+</script>
+</body>
+</html>
