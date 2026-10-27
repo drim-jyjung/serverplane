@@ -166,7 +166,7 @@ select.input{cursor:pointer}
         </div>
         <div class="card" id="lw-card" style="display:none">
           <div class="ch"><span class="ct">📣 지난주 정산 결과 <span id="lw-range" style="font-size:11px;font-weight:400;color:var(--text3)"></span></span>
-            <button class="btn bo bsm" id="btn-lw-copy">📋 경고자 복사</button>
+            <div style="display:flex;gap:6px"><button class="btn bo bsm" id="btn-lw-copy">📋 경고자 복사</button><button class="btn bo bsm" id="btn-lw-full-copy">📋 풀참 복사</button></div>
           </div>
           <div id="lw-body"></div>
         </div>
@@ -614,12 +614,16 @@ async function loadLastWeek(){
   c.style.display='';
   document.getElementById('lw-range').textContent=d.week_key+' · '+d.week_range;
   const body=document.getElementById('lw-body');
+  const fullH='<div class="dsum"><span>풀참(7일 전부 착륙) <b>'+(d.full_count||0)+'명</b></span></div>'
+    +((d.full_list&&d.full_list.length)?'<details><summary style="padding:9px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--primary)">풀참 명단 보기 ▾</summary><div class="scrollbox">'
+      +d.full_list.map(m=>`<div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)"><div style="min-width:90px;font-size:12px;font-weight:600">${escH(m.nickname)}</div><div style="flex:1;font-size:11px;color:var(--text3)">@${escH(m.insta_id)}</div><div style="font-size:12px;font-weight:700;min-width:30px;text-align:right">${m.week_land}회</div></div>`).join('')
+      +'</div></details>':'');
   if(!d.settled){
-    body.innerHTML='<div class="empty">지난주 주간 정산 기록이 없습니다<br><span style="font-size:11px">(주간 정산 전이거나, 지난주에 정산이 실행되지 않았습니다)</span></div>';
+    body.innerHTML='<div class="empty">지난주 주간 정산 기록이 없습니다<br><span style="font-size:11px">(주간 정산 전이거나, 지난주에 정산이 실행되지 않았습니다)</span></div>'+fullH;
     return;
   }
   if(!d.list.length){
-    body.innerHTML='<div class="empty" style="color:var(--green)">✅ 지난주는 미달 경고자가 없었습니다'+(d.settled_at?'<br><span style="font-size:11px">정산 '+escH(d.settled_at)+'</span>':'')+'</div>';
+    body.innerHTML='<div class="empty" style="color:var(--green)">✅ 지난주는 미달 경고자가 없었습니다'+(d.settled_at?'<br><span style="font-size:11px">정산 '+escH(d.settled_at)+'</span>':'')+'</div>'+fullH;
     return;
   }
   const row=m=>`<div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
@@ -632,6 +636,7 @@ async function loadLastWeek(){
   h+='<details><summary style="padding:9px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--primary)">명단 보기 ▾ <span style="font-weight:400;color:var(--text3)">(복사는 위 버튼으로 하세요)</span></summary><div class="scrollbox">'
     +d.list.map(row).join('')
     +'</div></details>';
+  h+=fullH;
   body.innerHTML=h;
 }
 document.getElementById('btn-lw-copy').addEventListener('click',e=>{
@@ -641,6 +646,16 @@ document.getElementById('btn-lw-copy').addEventListener('click',e=>{
   if(!d.list.length) lines.push('', '없음');
   if(d.list.length) lines.push('');
   d.list.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id} (${m.week_land}회)`));
+  copyText(lines.join('\n'), btn);
+});
+
+document.getElementById('btn-lw-full-copy').addEventListener('click',e=>{
+  const btn=e.currentTarget, d=lastWeekData;
+  if(!d||!Array.isArray(d.full_list)){ showBnr('derr','복사할 풀참 명단이 없습니다 (서버 업데이트 후 새로고침해 주세요)'); return; }
+  const lines=[`[${d.week_key} (${d.week_range}) 주 7회 풀참 ${d.full_list.length}명]`];
+  if(!d.full_list.length) lines.push('', '없음');
+  if(d.full_list.length) lines.push('');
+  d.full_list.forEach(m=>lines.push(`- ${m.nickname} @${m.insta_id}`));
   copyText(lines.join('\n'), btn);
 });
 
