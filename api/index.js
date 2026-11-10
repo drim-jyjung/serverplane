@@ -28,7 +28,7 @@ const ALLOWED = [
   "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
   // 정산 · 경고 · 회원 · 주간현황
   "run_daily", "run_weekly", "get_week_sheet", "init_week_sheet", "manual_warn", "resolve_warning", "adjust_warn",
-  "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member",
+  "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member", "delete_member",
   // 자동 실행 (CRON_SECRET 필요)
   "auto_lock_expired", "auto_daily_job",
 ];
@@ -38,7 +38,7 @@ const ADMIN_ONLY = new Set([
   "get_all_rooms", "get_room_details_batch", "get_members", "get_warnings", "get_parts", "get_logs", "get_daily", "get_last_week_result",
   "create_room", "create_preset", "update_room", "delete_room", "admin_update_link", "admin_land", "admin_delete_part",
   "run_daily", "run_weekly", "get_week_sheet", "init_week_sheet", "manual_warn", "resolve_warning", "adjust_warn",
-  "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member",
+  "adjust_excellent", "adjust_honorary", "toggle_lock", "add_member", "update_member", "delete_member",
 ]);
 const AUTH_FAIL = { ok: false, error: "관리자 로그인이 필요합니다. 다시 로그인해주세요", auth_required: true };
 
