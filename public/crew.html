@@ -228,7 +228,8 @@ const API = 'https://serverplane.vercel.app/api';
 
 const SK = 'plane_crew_v2';
 const SK_CRED = 'plane_crew_cred';
-let me = null, currentRoom = null, participants = [], weekLandCount = 0, todayParticipated = false;
+let me = null, currentRoom = null, participants = [], weekLandCount = 0, weekHonorary = false, weekHonCount = 0, todayParticipated = false;
+const wkSplit = () => `일반 <strong>${weekLandCount}회</strong> · 명예 <strong>${weekHonCount}회</strong>`;
 
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
@@ -522,6 +523,8 @@ async function goTicket(roomId) {
   const detailRes = await api('get_room_detail',{room_id:roomId, member_id:me.member_id});
   weekLandCount = detailRes.ok && detailRes.my_week ? (detailRes.my_week.week_board_count ?? detailRes.my_week.week_land_count ?? 0) : 0; // 주간 필참 = 참여(탑승) 일수
   todayParticipated = detailRes.ok && detailRes.my_week ? !!detailRes.my_week.today_participated : false;
+  weekHonorary = detailRes.ok && detailRes.my_week ? !!detailRes.my_week.honorary_pass : false;
+  weekHonCount = detailRes.ok && detailRes.my_week ? (detailRes.my_week.week_honorary_count || 0) : 0;
   if (!detailRes.ok) {
     document.getElementById('p-list').innerHTML='<div class="empty">불러오기 실패</div>'; return;
   }
@@ -598,7 +601,7 @@ function renderMyPart(beforeTicket,inTicket,showLanding,inLand,afterAll) {
         ${myPart.post_url?`<div class="link-box">${myPart.post_url}</div>`:'<div class="my-row-sub" style="margin-top:4px">링크 미등록</div>'}
       </div></div>
     </div>
-    <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--text2)">이번주 <strong>${weekLandCount}일</strong> 참여${weekLandCount>=2?' · ✅ 필참 달성':` · ${2-weekLandCount}일 더 필요`}</div>`;
+    <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--text2)">${weekHonorary?`이번주 ${wkSplit()} · ✅ 필참 인정`:`이번주 ${wkSplit()}${weekLandCount>=2?' · ✅ 필참 달성':` · 일반 ${2-weekLandCount}회 더 필요`}`}</div>`;
     return;
   }
 
@@ -644,11 +647,13 @@ function renderMyPart(beforeTicket,inTicket,showLanding,inLand,afterAll) {
 
   if (inTicket) {
     const ec=me?.excellent_count||0, hc=me?.honorary_count||0;
-    const passMsg=weekLandCount>=2
-      ?`<span style="color:var(--green);font-weight:700">✅ 이번주 ${weekLandCount}일 참여 (필참 달성)</span>`
+    const passMsg=weekHonorary
+      ?`<span style="color:var(--green);font-weight:700">🏅 이번주 ${wkSplit()} — 필참 인정</span>`
+      :weekLandCount>=2
+      ?`<span style="color:var(--green);font-weight:700">✅ 이번주 ${wkSplit()} (필참 달성)</span>`
       :todayParticipated
-        ?`<span style="color:var(--primary);font-weight:700">🛫 오늘 참여 중 · 이번주 ${weekLandCount}일 참여 · ${2-weekLandCount}일 더 필요</span>`
-        :`<span style="color:var(--amber);font-weight:700">⚠ 이번주 ${weekLandCount}일 참여 (${2-weekLandCount}일 더 필요)</span>`;
+        ?`<span style="color:var(--primary);font-weight:700">🛫 오늘 참여 중 · 이번주 ${wkSplit()} · 일반 ${2-weekLandCount}회 더 필요</span>`
+        :`<span style="color:var(--amber);font-weight:700">⚠ 이번주 ${wkSplit()} (일반 ${2-weekLandCount}회 더 필요)</span>`;
     el.innerHTML=`<div class="my-block">
       <div style="padding:9px 14px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px">🛫 ${passMsg}</div>
       <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
@@ -659,7 +664,7 @@ function renderMyPart(beforeTicket,inTicket,showLanding,inLand,afterAll) {
         <div>
           <div class="my-row-label" style="margin-bottom:5px">탑승 유형</div>
           <select class="input" id="sel-ticket-type">
-            <option value="normal">✈ 일반 탑승 — 주 2회 필참 카운트</option>
+            <option value="normal">✈ 일반 탑승 — 주 2일 필참 카운트</option>
             <option value="staff">🎖 운영진 탑승 — 즉시 착륙, 주 2회 제외</option>
             ${ec>0?`<option value="excellent">⭐ 우수 탑승 (보유 ${ec}개) — 즉시 착륙, 주 2회 제외</option>`:''}
             ${hc>0?`<option value="honorary">🏅 명예 탑승 (보유 ${hc}개) — 즉시 착륙, 주 2회 제외</option>`:''}
