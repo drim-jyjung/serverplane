@@ -228,8 +228,8 @@ const API = 'https://serverplane.vercel.app/api';
 
 const SK = 'plane_crew_v2';
 const SK_CRED = 'plane_crew_cred';
-let me = null, currentRoom = null, participants = [], weekLandCount = 0, weekHonorary = false, weekHonCount = 0, todayParticipated = false;
-const wkSplit = () => `일반 <strong>${weekLandCount}회</strong> · 명예 <strong>${weekHonCount}회</strong>`;
+let me = null, currentRoom = null, participants = [], weekLandCount = 0, weekHonorary = false, weekHonCount = 0, weekStaff = false, todayParticipated = false;
+const wkSplit = () => `일반 <strong>${weekLandCount}회</strong> · 명예·우수 <strong>${weekHonCount}회</strong>`;
 
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
@@ -524,6 +524,7 @@ async function goTicket(roomId) {
   weekLandCount = detailRes.ok && detailRes.my_week ? (detailRes.my_week.week_board_count ?? detailRes.my_week.week_land_count ?? 0) : 0; // 주간 필참 = 참여(탑승) 일수
   todayParticipated = detailRes.ok && detailRes.my_week ? !!detailRes.my_week.today_participated : false;
   weekHonorary = detailRes.ok && detailRes.my_week ? !!detailRes.my_week.honorary_pass : false;
+  weekStaff = detailRes.ok && detailRes.my_week ? !!detailRes.my_week.staff_exempt : false;
   weekHonCount = detailRes.ok && detailRes.my_week ? (detailRes.my_week.week_honorary_count || 0) : 0;
   if (!detailRes.ok) {
     document.getElementById('p-list').innerHTML='<div class="empty">불러오기 실패</div>'; return;
@@ -601,7 +602,7 @@ function renderMyPart(beforeTicket,inTicket,showLanding,inLand,afterAll) {
         ${myPart.post_url?`<div class="link-box">${myPart.post_url}</div>`:'<div class="my-row-sub" style="margin-top:4px">링크 미등록</div>'}
       </div></div>
     </div>
-    <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--text2)">${weekHonorary?`이번주 ${wkSplit()} · ✅ 필참 인정`:`이번주 ${wkSplit()}${weekLandCount>=2?' · ✅ 필참 달성':` · 일반 ${2-weekLandCount}회 더 필요`}`}</div>`;
+    <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--text2)">${weekStaff?'🎖 운영진 계정 · 필참 면제':weekHonorary?`이번주 ${wkSplit()} · ✅ 필참 인정`:`이번주 ${wkSplit()}${weekLandCount>=2?' · ✅ 필참 달성':` · 일반 ${2-weekLandCount}회 더 필요`}`}</div>`;
     return;
   }
 
@@ -647,7 +648,9 @@ function renderMyPart(beforeTicket,inTicket,showLanding,inLand,afterAll) {
 
   if (inTicket) {
     const ec=me?.excellent_count||0, hc=me?.honorary_count||0;
-    const passMsg=weekHonorary
+    const passMsg=weekStaff
+      ?`<span style="color:var(--green);font-weight:700">🎖 운영진 계정 — 필참 면제</span>`
+      :weekHonorary
       ?`<span style="color:var(--green);font-weight:700">🏅 이번주 ${wkSplit()} — 필참 인정</span>`
       :weekLandCount>=2
       ?`<span style="color:var(--green);font-weight:700">✅ 이번주 ${wkSplit()} (필참 달성)</span>`
